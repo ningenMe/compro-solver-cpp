@@ -50,7 +50,7 @@ public:
 		edge[from].push_back(to);
         redge[to].push_back(from);
 	}
-	//rootを含む最小閉路の集合を返す O(N)
+	//rootを含む最小閉路の集合を返す O(N) 閉路がないときは空集合
 	vector<int> solve(int root,int inf = 123456789){
 		int mini = inf;
         int last = -1;
@@ -72,14 +72,12 @@ public:
         vector<int> res;
         if(last != -1){
             res.push_back(last);
-            q.push(last);
-            while(q.size()){
-                int curr = q.front();
-                q.pop();
+            int curr = last;
+            while(curr != root){
                 for(int next:redge[curr]){
                     if(dist[next]+1==dist[curr]) {
                         res.push_back(next);
-                        q.push(next);
+                        curr = next;
                         break;
                     }
                 }
@@ -89,6 +87,7 @@ public:
 		return res;
 	}
 };
+
 
 int main() {
     int N,M; cin >> N >> M;
