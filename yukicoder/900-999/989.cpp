@@ -33,6 +33,29 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
-
+    ll N,M,K;
+    char c;
+    cin >> N >> M >> K >> c;
+    vector<ll> B(M),A(N);
+    for(int i = 0; i < M; ++i) cin >> B[i];
+    for(int i = 0; i < N; ++i) cin >> A[i];
+    sort(ALL(B));
+    sort(ALL(A),greater<>());
+    int j = 0;
+    ll ans = 0;
+    for(int i = 0; i < N; ++i){
+        while (j < M) {
+            if(c=='+'){
+                if(A[i]+B[j]<K) j++;
+                else break;
+            }
+            else{
+                if(A[i]*B[j]<K) j++;
+                else break;                
+            }
+        }
+        ans += M-j;
+    }
+    cout << ans << endl;
     return 0;
 }

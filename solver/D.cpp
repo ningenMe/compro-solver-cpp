@@ -1,15 +1,10 @@
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
-using ull = unsigned long long;
 
-#define REP(i,n) for(long long i = 0; i < (n); i++)
-#define FOR(i, m, n) for(long long i = (m);i < (n); ++i)
 #define ALL(obj) (obj).begin(),(obj).end()
 #define SPEED cin.tie(0);ios::sync_with_stdio(false);
 
-template<class T> using V = vector<T>;
-template<class T, class U> using P = pair<T, U>;
 template<class T> using PQ = priority_queue<T>;
 template<class T> using PQR = priority_queue<T,vector<T>,greater<T>>;
 
@@ -17,7 +12,7 @@ constexpr long long MOD = (long long)1e9 + 7;
 constexpr long long MOD2 = 998244353;
 constexpr long long HIGHINF = (long long)1e18;
 constexpr long long LOWINF = (long long)1e15;
-constexpr long double PI = 3.1415926535897932384626433;
+constexpr long double PI = 3.1415926535897932384626433L;
 
 template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,init);}
 template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}

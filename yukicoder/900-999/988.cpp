@@ -33,6 +33,19 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
-
+    ll N,M,K;
+    char c;
+    cin >> N >> M >> K >> c;
+    vector<ll> B(M),A(N);
+    for(int i = 0; i < M; ++i) cin >> B[i];
+    for(int i = 0; i < N; ++i) cin >> A[i];
+    int j = 0;
+    ll ans = 0,sum = accumulate(ALL(B),0LL)%K;
+    for(int i = 0; i < N; ++i){
+        A[i] %= K;
+        ans += (c=='+' ? (sum + A[i]*M) : (sum * A[i]));
+        ans %= K;
+    }
+    cout << ans << endl;
     return 0;
 }
