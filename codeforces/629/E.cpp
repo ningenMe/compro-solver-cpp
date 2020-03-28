@@ -265,7 +265,7 @@ int main() {
         int r = v.back();
         int flg = 1;
         for(int l:v){
-            if(l==1) continue;
+            if(l==0) continue;
             int p = tree.parent[l];
             int lca = tree.lca(l,r);
             if(lca != l & lca != p) flg = 0;
