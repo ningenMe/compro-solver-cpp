@@ -33,19 +33,11 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
-    SPEED
-    int t; cin >> t;
-    while(t--){
-        int N; cin >> N;
-        vector<int> A(N);
-        for(int i = 0; i < N; ++i) cin >> A[i];
-        string ans = "Yes";
-        for(int i = 0; i+1 < N; ++i) {
-            if(A[i]+1<A[i+1]) ans = "No";
-        }
-        cout << ans << endl;
-    }
-
-
+    ll N,K; cin >> N >> K;
+    ll r = (N*(N+1))/2;
+    ll a = ((N-K)*(N-K+1))/2;
+    ll b = r - a;
+    ll l = a - b;
+    cout << abs(r-l+1)/2 + 1 << endl;
     return 0;
 }

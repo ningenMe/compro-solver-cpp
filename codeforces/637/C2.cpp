@@ -27,7 +27,7 @@ void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
 template <class T> void chmax(T& a, const T b){a=max(a,b);}
-template <class T> void chmin(T& a, const T b){a=min(a,b);}
+template <class T> inline void chmin(T& a, const T b){a=min(a,b);}
 void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
@@ -41,38 +41,38 @@ int main() {
     int G,R; cin >> G >> R;
     int X = G+1;
     ll inf = LOWINF;
-    auto dp = multivector(M*(G+1),inf);
+    vector<ll> dp(M*(G+1),inf);
     dp[0*0] = 0;
-    PQR<pair<ll,int>> pq;
-    pq.push({0,0});
-    while(pq.size()) {
-        auto p = pq.top();
-        pq.pop();
+    queue<pair<ll,int>> q0,q1;
+    q0.push({0,0});
+    while(q0.size() || q1.size()) {
+        pair<ll,int> p;
+        if(q0.size()){
+            p = q0.front();
+            q0.pop();
+        }
+        else{
+            p = q1.front();
+            q1.pop();            
+        }
         int from = p.second / X;
         int mod = p.second % X;
         int to;
         to = from - 1;
-        if(0 <= to && to < M) {
-            ll d = abs(A[to]-A[from]);
-            if(mod + d <= G && dp[to*X+mod+d] > dp[from*X+mod]+d){
-                dp[to*X+mod+d] = dp[from*X+mod]+d;
-                pq.push({dp[to*X+mod+d],to*X+mod+d});
-            }
+        if(0 <= to && to < M && mod + abs(A[to]-A[from]) <= G && dp[to*X+mod+abs(A[to]-A[from])] > dp[from*X+mod]+abs(A[to]-A[from])){
+            dp[to*X+mod+abs(A[to]-A[from])] = dp[from*X+mod]+abs(A[to]-A[from]);
+            q0.push({dp[to*X+mod+abs(A[to]-A[from])],to*X+mod+abs(A[to]-A[from])});
         }
         to = from + 1;
-        if(0 <= to && to < M) {
-            ll d = abs(A[to]-A[from]);
-            if(mod + d <= G && dp[to*X+mod+d] > dp[from*X+mod]+d){
-                dp[to*X+mod+d] = dp[from*X+mod]+d;
-                pq.push({dp[to*X+mod+d],to*X+mod+d});
-            }
+        if(0 <= to && to < M && mod + abs(A[to]-A[from]) <= G && dp[to*X+mod+abs(A[to]-A[from])] > dp[from*X+mod]+abs(A[to]-A[from])){
+            dp[to*X+mod+abs(A[to]-A[from])] = dp[from*X+mod]+abs(A[to]-A[from]);
+            q0.push({dp[to*X+mod+abs(A[to]-A[from])],to*X+mod+abs(A[to]-A[from])});
         }
         to = from;
         if(mod == G) {
-            ll d = R;
-            if(dp[to*X+0] > dp[from*X+mod]+d){
-                dp[to*X+0] = dp[from*X+mod]+d;
-                pq.push({dp[to*X+0],to*X+0});
+            if(dp[to*X] > dp[from*X+mod]+R){
+                dp[to*X] = dp[from*X+mod]+R;
+                q1.push({dp[to*X],to*X});
             }
         }
     }
