@@ -2,7 +2,7 @@ begin=$1
 end=$2
 dirbegin=$(((begin/100)*100))
 dirend=$((dirbegin+99))
-dirname=/mnt/d/compro-solver/yukicoder/${dirbegin}-${dirend}
+dirname=`pwd`/../yukicoder/${dirbegin}-${dirend}
 mkdir -p $dirname
 cd $dirname
 for i in `seq ${begin} ${end}`
