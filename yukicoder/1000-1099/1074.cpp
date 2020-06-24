@@ -2,6 +2,21 @@
 using namespace std;
 using ll = long long;
 
+#define ALL(obj) (obj).begin(),(obj).end()
+#define SPEED cin.tie(0);ios::sync_with_stdio(false);
+
+template<class T> using PQ = priority_queue<T>;
+template<class T> using PQR = priority_queue<T,vector<T>,greater<T>>;
+
+constexpr long long MOD = (long long)1e9 + 7;
+constexpr long long MOD2 = 998244353;
+constexpr long long HIGHINF = (long long)1e18;
+constexpr long long LOWINF = (long long)1e15;
+constexpr long double PI = 3.1415926535897932384626433L;
+
+template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,init);}
+template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}
+template <class T> void corner(bool flg, T hoge) {if (flg) {cout << hoge << endl; exit(0);}}
 template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
 template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
@@ -11,6 +26,11 @@ template <template <class tmp>  class T, class U> ostream &operator<<(ostream &o
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
+template <class T> void chmax(T& a, const T b){a=max(a,b);}
+template <class T> void chmin(T& a, const T b){a=min(a,b);}
+void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
+void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
+void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
  * @title SegmentTreeBeats
@@ -221,17 +241,20 @@ public:
 };
 
 int main() {
-	cin.tie(0);ios::sync_with_stdio(false);
-	int N,M; cin >> N >> M;
-	ll ans = 0,pre=0;
-	SegmentTreeBeats<ll> Seg(N);
-	for(int i = 0; i < M; ++i) {
-		int t,l,r; cin >> t >> l >> r;
-		l--;
-		Seg.range_add(0,N,t-pre);
-		ans += Seg.get_sum(l,r);
-		Seg.range_chmin(l,r,0);
-		pre = t;
-	} 
-	cout << ans << endl;
+    SPEED
+    int N,M=20000; cin >> N;
+    SegmentTreeBeats<ll> seg1(M),seg2(M),seg3(M),seg4(M);
+    ll pre=0,sum=0;
+    while(N--){
+        int lx,ly,rx,ry;
+        cin >> lx >> ly >> rx >> ry;
+        seg1.range_chmax(0,rx,ry);
+        seg2.range_chmax(0,rx,-ly);
+        seg3.range_chmax(0,-lx,ry);
+        seg4.range_chmax(0,-lx,-ly);
+        sum=seg1.get_sum(0,M)+seg2.get_sum(0,M)+seg3.get_sum(0,M)+seg4.get_sum(0,M);
+        cout << sum-pre << endl;
+        pre=sum;
+    }
+    return 0;
 }
