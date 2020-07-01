@@ -22,6 +22,7 @@ template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; f
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
+template <template <class tmp>  class T, class U> ostream &operator<<(ostream &o, const T<U> &obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr)o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
@@ -32,5 +33,28 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+	int N; cin >> N;
+	vector<ll> A(N);
+	for(int i = 0; i < N; ++i) cin >> A[i];
+	ll M = 0;
+	for(int i = 2; i < N; ++i) M ^= A[i];
+	ll S = A[0]+A[1];
+	corner(S<M,-1);
+	corner((S-M)%2,-1);
+	ll X = (S-M)/2, Y = X;
+	corner(X>A[0],-1);
+	S -= X+Y;
+	for(ll i = 40; 0 <= i; --i) {
+		if(!((1LL<<i) & S)) continue;
+		corner((1LL<<i) & X,-1);
+		if(X + (1LL<<i) <= A[0]) {
+			X += (1LL<<i);
+		}
+		else {
+			Y += (1LL<<i);
+		}
+	}
+	corner(X==0,-1);
+	cout << A[0]-X << endl;
     return 0;
 }

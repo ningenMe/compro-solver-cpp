@@ -22,6 +22,7 @@ template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; f
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
+template <template <class tmp>  class T, class U> ostream &operator<<(ostream &o, const T<U> &obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr)o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
@@ -31,6 +32,31 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+//Pow_Mod O(log(n))
+long long PowMod(long long x, long long n, long long mod) {
+    long long res = 1;
+    for (; n > 0; n >>= 1, (x *= x) %= mod) if (n & 1) (res *= x) %= mod;
+    return res;
+}
+
+//Inv_Mod O(log(mod))
+long long InvMod(long long x, long long mod){
+	return PowMod(x,mod-2,mod); 
+}
+
 int main() {
+	ll P; cin >> P;
+	int N; cin >> N;
+	vector<int> A(N);
+	for(int i = 0; i < N; ++i) cin >> A[i];
+	string S; cin >> S;
+	ll x = A[0]%P;
+	for(int i = 1; i < N; ++i) {
+		if(S[i-1]=='+') (x += A[i]) %= P;
+		if(S[i-1]=='-') (x += P-A[i]%P) %= P;
+		if(S[i-1]=='*') (x *= A[i]) %= P;
+		if(S[i-1]=='/') (x *= InvMod(A[i],P)) %= P;
+	}
+	cout << x << endl;
     return 0;
 }
