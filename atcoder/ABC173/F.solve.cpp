@@ -32,5 +32,18 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+	int N; cin >> N;
+	ll ans = 0;
+	for(ll i = 1; i <= N; ++i) {
+		ans += i*(N-i+1);
+	}
+	for(int i = 0; i < N-1; ++i) {
+		int u,v; cin >> u >> v;
+		if(u>v) swap(u,v);
+		ll l = u, r = (N+1)-v;
+		ans -= l*r;
+	}
+	cout << ans << endl;
+
     return 0;
 }

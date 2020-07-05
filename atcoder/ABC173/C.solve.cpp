@@ -32,5 +32,35 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int H,W,K; cin >> H >> W >> K;
+    vector<string> C(H);
+    for(int i = 0; i < H; ++i) cin >> C[i];
+    int ans = 0;
+    for(int i = 0; i < (1<<H); ++i) {
+        for(int j = 0; j < (1<<W); ++j) {
+            auto D = C;
+            for(int k = 0; k < H; ++k) {
+                if(i&(1<<k)) continue;
+                for(int l = 0; l < W; ++l) {
+                    D[k][l]='@';
+                }
+            }
+            for(int k = 0; k < W; ++k) {
+                if(j&(1<<k)) continue;
+                for(int l = 0; l < H; ++l) {
+                    D[l][k]='@';
+                }
+            }
+            int cnt = 0;
+            for(int k = 0; k < H; ++k) {
+                for(int l = 0; l < W; ++l) {
+                    if(D[k][l]=='#') cnt++;
+                }
+            }
+            ans += (cnt==K);
+        }
+    }
+    cout << ans << endl;
+
     return 0;
 }

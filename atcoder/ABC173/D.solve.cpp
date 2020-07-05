@@ -32,5 +32,17 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int N; cin >> N;
+    vector<ll> A(N);
+    for(int i = 0; i < N; ++i) cin >> A[i];
+    sort(ALL(A));
+    ll ans = A.back();
+    int M = N-2;
+    for(int i = N-2; 0 <= i; --i) {
+        ll K = min(2,M);
+        ans += A[i]*K;
+        M -= K;
+    }
+    cout << ans << endl;
     return 0;
 }

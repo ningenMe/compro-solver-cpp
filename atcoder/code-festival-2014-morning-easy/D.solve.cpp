@@ -32,5 +32,36 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int N,M; cin >> N >> M;
+    PQR<pair<int,int>> pq;
+    while(N--) {
+        int x,y; cin >> x >> y;
+        pq.push({x,y});
+    } 
+    vector<int> a;
+    while(M--) {
+        int x; cin >> x;
+        a.push_back(x);
+    }
+    sort(ALL(a));
+    PQR<int> pq2;
+    int ans = 0;
+    for(auto& x:a){
+        while(pq2.size() && pq2.top() < x) {
+            pq2.pop();
+        }
+        while(pq.size() && pq.top().first <= x) {
+            pq2.push(pq.top().second);
+            pq.pop();
+        }
+        while(pq2.size() && pq2.top() < x) {
+            pq2.pop();
+        }
+        if(pq2.size() && x <= pq2.top()) {
+            pq2.pop();
+            ans++;
+        }
+    }
+    cout << ans << endl;
     return 0;
 }

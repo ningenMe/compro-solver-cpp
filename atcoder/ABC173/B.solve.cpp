@@ -32,5 +32,16 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int N; cin >> N;
+    map<string,int> mp;
+    while(N--){
+        string S; cin >> S;
+        mp[S]++;
+    }
+    cout << "AC x " << mp["AC"] << endl;
+    cout << "WA x " << mp["WA"] << endl;
+    cout << "TLE x " << mp["TLE"] << endl;
+    cout << "RE x " << mp["RE"] << endl;
+
     return 0;
 }
