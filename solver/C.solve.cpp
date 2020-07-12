@@ -28,6 +28,7 @@ template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {co
 template <class T> void chmax(T& a, const T b){a=max(a,b);}
 template <class T> void chmin(T& a, const T b){a=min(a,b);}
 std::vector<std::string> split(const std::string &str, const char delemiter) {std::vector<std::string> res;std::stringstream ss(str);std::string buffer; while( std::getline(ss, buffer, delemiter) ) res.push_back(buffer); return res;}
+int msb(int x) {return x?31-__builtin_clz(x):-1;}
 void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}

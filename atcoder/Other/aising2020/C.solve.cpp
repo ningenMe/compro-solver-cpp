@@ -34,5 +34,17 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int M = 10000;
+    vector<int> ans(M+1,0);
+    for(int i = 1; i*i <= M; ++i) {
+        for(int j = 1; j*j <= M; ++j) {
+            for(int k = 1; k*k <= M; ++k) {
+                int a = i*i+j*j+k*k+i*j+j*k+k*i;
+                if(a<=M) ans[a]++;
+            }
+        }
+    }
+    int N; cin >> N;
+    for(int i = 1; i <= N; ++i) cout << ans[i] << endl;
     return 0;
 }

@@ -33,6 +33,64 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int all_same(const string& S) {
+    int flg = 1;
+    char c = S.front();
+    for(int i = 0; i < S.size(); ++i) if(c!=S[i]) flg=0;
+    return flg;
+}
 int main() {
+    int N = 19;
+    vector<string> S(N);
+    for(int i = 0; i < N; ++i) cin >> S[i];
+    int b=0,w=0,flg=1;
+    for(int i = 0; i < N; ++i) {
+        for(int j = 0; j < N; ++j) {
+            if(S[i][j]=='o')b++;
+            if(S[i][j]=='x')w++;
+        }
+    }
+    if(b<w || b-w>1) flg=0;
+    char last;
+    if(b>w) last='o';
+    else last='x';
+    int ok=0;
+    for(int y = 0; y < N; ++y) {
+        for(int x = 0; x < N; ++x) {
+            if(S[y][x]!=last) continue;
+            S[y][x]='.';
+            vector<string> VT;
+            for(int i = 0; i < N; ++i) {
+                for(int j = 0; j < N; ++j) {
+                    if(S[i][j]=='.') continue;
+                    {
+                        string T;
+                        for(int l = 0; l < 5 && i+l<N; ++l) T.push_back(S[i+l][j]);
+                        if(all_same(T) && T.size()==5) VT.push_back(T);
+                    }
+                    {
+                        string T;
+                        for(int l = 0; l < 5 && j+l<N; ++l) T.push_back(S[i][j+l]);
+                        if(all_same(T) && T.size()==5) VT.push_back(T);
+                    }
+                    {
+                        string T;
+                        for(int l = 0; l < 5 && i+l<N && j+l<N; ++l) T.push_back(S[i+l][j+l]);
+                        if(all_same(T) && T.size()==5) VT.push_back(T);
+                    }
+                    {
+                        string T;
+                        for(int l = 0; l < 5 && i+l<N && 0<=j-l; ++l) T.push_back(S[i+l][j-l]);
+                        if(all_same(T) && T.size()==5) VT.push_back(T);
+                    }
+                }
+            }
+            if(VT.empty()) ok=1;
+            S[y][x]=last;
+        }
+    }
+    if(!ok) flg = 0;
+    if(!b && !w) flg = 1;
+    YN(flg);
     return 0;
 }

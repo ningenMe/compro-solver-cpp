@@ -34,5 +34,53 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    SPEED
+    int N,M; cin >> N >> M;
+    vector<vector<int>> edge(N),redge(N);
+    while(M--){
+        int u,v; cin >> u >> v;
+        u--,v--;
+        edge[u].push_back(v);
+        redge[v].push_back(u);
+    }
+    string S; cin >> S;
+    S += "\"";
+    auto VS = split(S,'"');
+    int L = 0;
+    set<int> st;
+    for(auto& T:VS) {
+        L++;
+        if(T.substr(0,5)=="group") {
+            string U = T.substr(5,T.size());
+            if(T.back()=='w') {
+                T = "ww";
+                U.pop_back();
+            }
+            else {
+                T = "";
+            }
+            st.insert(stoi(U)-1);
+            break;
+        }
+    }
+    for(int i = L-1; i < VS.size(); ++i) {
+        if(VS[i]=="ww") {
+            set<int> tmp;
+            for(auto to:st){
+                for(int from:redge[to]) tmp.insert(from);
+            }            
+            st=tmp;
+        }
+        else{
+            vector<int> v(N,st.size());
+            for(auto to:st){
+                for(int from:redge[to]) v[from]--;
+            }
+            set<int> tmp;
+            for(int i = 0; i < N; ++i) if(v[i]) tmp.insert(i);
+            st=tmp;
+        }
+    }
+    cout << st.size() << endl;
     return 0;
 }

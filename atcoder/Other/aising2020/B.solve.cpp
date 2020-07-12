@@ -34,5 +34,15 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int N; cin >> N;
+    vector<int> A(N);
+    for(int i = 0; i < N; ++i) cin >> A[i];
+    int ans = 0;
+    for(int i = 0; i < N; ++i) {
+        if(i%2) continue;
+        if(A[i]%2==0) continue;
+        ans++;
+    }
+    cout << ans << endl;
     return 0;
 }

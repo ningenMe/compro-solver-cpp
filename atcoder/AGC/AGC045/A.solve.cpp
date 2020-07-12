@@ -33,6 +33,31 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int f(void) {
+    int N; cin >> N;
+    vector<ll> A(N);
+    for(int i = 0; i < N; ++i) cin >> A[i];
+    string S; cin >> S;
+    vector<ll> base(1,0);
+    for(int i = N-1; 0 <= i; --i) {
+        ll x = A[i];
+        sort(ALL(base),greater<>());
+        if(S[i]=='0') {
+            for(auto y:base) chmin(x,x^y);
+            if(x) base.push_back(x);
+        }
+        else{
+            for(auto y:base) chmin(x,x^y);
+            if(x) return 1;
+        }
+    }
+    return 0;
+}
+
 int main() {
+    int T; cin >> T;
+    while(T--){
+        cout << f() << endl;
+    }
     return 0;
 }

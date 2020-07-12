@@ -27,12 +27,24 @@ template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
 template <class T> void chmax(T& a, const T b){a=max(a,b);}
 template <class T> void chmin(T& a, const T b){a=min(a,b);}
-std::vector<std::string> split(const std::string &str, const char delemiter) {std::vector<std::string> res;std::stringstream ss(str);std::string buffer; while( std::getline(ss, buffer, delemiter) ) res.push_back(buffer); return res;}
-int msb(int x) {return x?31-__builtin_clz(x):-1;}
 void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+	int N; cin >> N;
+	vector<int> A(N);
+	for(int i = 0; i < N; ++i) cin >> A[i];
+	vector<set<int>> edge(N);
+	for(int i = 0; i < N; ++i) {
+		for(int j = i+1; j < N; ++j) {
+			if(A[i]>A[j]) {
+				edge[i].insert(j);
+				edge[j].insert(i);
+			}
+		}
+	}
+	auto B = A;
+	
     return 0;
 }

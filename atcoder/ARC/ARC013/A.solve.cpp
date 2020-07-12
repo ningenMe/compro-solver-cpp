@@ -34,5 +34,29 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    SPEED
+    int N; cin >> N;
+    ll cnt = 0;
+    while(N--){
+        int x,y,z; cin >> x >> y >> z;
+        int M; cin >> M;
+        int a=0,b=0,c=0,d=x,e=y,f=z;
+        while(M--){
+            int s,t,u; cin >> s >> t >> u;
+            chmax(a,s);
+            chmax(b,t);
+            chmax(c,u);
+            chmin(d,s);
+            chmin(e,t);
+            chmin(f,u);
+        }
+        cnt ^= (x-1-a);
+        cnt ^= (y-1-b);
+        cnt ^= (z-1-c);
+        cnt ^= (d);
+        cnt ^= (e);
+        cnt ^= (f);
+    }
+    cout << (cnt?"WIN":"LOSE") << endl;
     return 0;
 }

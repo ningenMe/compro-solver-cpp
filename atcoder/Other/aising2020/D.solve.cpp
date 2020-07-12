@@ -33,6 +33,88 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+
+/*
+ * @title NBase
+ */
+class NBase{
+public:
+	inline static vector<long long> translate(long long X,long long N) {
+		assert(abs(N)>1);
+		vector<long long> res;
+		while(1) {
+			long long b = (X%abs(N)+abs(N)) % abs(N);
+			res.push_back(b);
+			(X -= b) /= N;
+			if(X==0) break;
+		}
+		return res;
+	}
+	//Digit Sum
+	inline static constexpr long long digit_sum(long long N, long long K) {
+		long long sum = 0;
+		for (; N > 0; N /= K) sum += N % K;
+		return sum;
+	}
+};
+
+
 int main() {
+    ll N; cin >> N;
+    string S; cin >> S;
+    reverse(ALL(S));
+    vector<ll> A(N);
+    for(int i = 0; i < N; ++i) {
+        A[i]=S[i]-'0';
+    }
+    int cnt = 0;
+    ll sum0 = accumulate(ALL(A),0LL)+1;
+    ll sum1 = accumulate(ALL(A),0LL)-1;
+    ll num0=0,num1=0;
+    vector<ll> base0(N+1,1),base1(N+1,1);
+    for(int i = 0; i < N; ++i) {
+        num0 += A[i]*base0[i];
+        num0 %= sum0;
+        base0[i+1] = 2*base0[i];
+        base0[i+1] %= sum0; 
+        
+        if(sum1>0) {
+            num1 += A[i]*base1[i];
+            num1 %= sum1;
+            base1[i+1] = 2*base1[i];
+            base1[i+1] %= sum1; 
+        }
+    }
+    vector<ll> ans(N);
+    for(int n = 0; n < N; ++n) {
+        ll sum = 0;
+        ll num = 0;
+        if(A[n]) {
+            sum = sum1;
+            if(sum==0) {
+                ans[n]=0;
+                continue;
+            }
+            num = num1;
+            num += sum-(base1[n])%sum;
+            num %= sum;
+        }
+        else{
+            sum=sum0;
+            num = num0;
+            num += base0[n];
+            num %= sum;
+        }
+        ans[n]++;
+        while(1) {
+            sum = NBase::digit_sum(num,2);
+            if(!sum) break;
+            num %= sum;
+            ans[n]++;
+        }
+    }
+    for(int i = N-1; 0 <= i; --i) {
+        cout << ans[i] << endl;
+    }
     return 0;
 }

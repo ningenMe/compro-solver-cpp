@@ -34,5 +34,12 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int L,R,D; cin >> L >> R >> D;
+    int ans = 0;
+    for(int i = L; i <= R; ++i) {
+        if(i%D==0) ans++;
+    }
+    cout << ans << endl;
+    
     return 0;
 }

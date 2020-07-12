@@ -34,5 +34,32 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int N = 8;
+    vector<string> S(N);
+    for(int i = 0; i < N; ++i) cin >> S[i];
+    vector<int> p(N,0);
+    iota(ALL(p),0);
+    vector<string> T;
+    int flg = 0;
+    do{
+        T = S;
+        for(int i = 0; i < N; ++i) T[i][p[i]]='Q';
+        int sum=0;
+        vector<int> cnt1(2*N),cnt2(2*N);
+        for(int i = 0; i < N; ++i) for(int j = 0; j < N; ++j) {
+            if(T[i][j]!='Q') continue;
+            sum++;
+            cnt1[i+j]++;
+            cnt2[i+N-1-j]++;
+        }
+        if(sum==N && *max_element(ALL(cnt1)) < 2 && *max_element(ALL(cnt2)) < 2) {
+            flg = 1;
+            break;
+        }
+    }while (next_permutation(ALL(p)));
+    corner(!flg,"No Answer");
+    for(int i = 0; i < N; ++i) {
+        cout << T[i] << endl;
+    }
     return 0;
 }

@@ -33,6 +33,84 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title UnionFindTree
+ */
+class UnionFindTree {
+public:
+	vector<int> parent;
+	vector<int> rank;
+
+	UnionFindTree(int N) : parent(N), rank(N,0){
+		iota(parent.begin(),parent.end(),0);
+	} 
+	int root(int n) {
+		return (parent[n] == n ? n : parent[n] = root(parent[n]));
+	}
+	inline int same(int n, int m) {
+		return root(n) == root(m);
+	}
+	inline void unite(int n, int m) {
+		n = root(n);
+		m = root(m);
+		if (n == m) return;
+		if (rank[n]<rank[m]) {
+			parent[n] = m;
+		}
+		else{
+			parent[m] = n;
+			if(rank[n] == rank[m]) rank[n]++;
+		}
+	}
+};
+
+
+//Prime Factorization O(sqrt(N))
+vector<pair<long long,long long>> PrimeFactorization(long long N) {
+    vector<pair<long long,long long>> ret;
+    if (N == 1) ret.push_back({1,0});
+    for (long long i = 2,M = N; i*i <= M; ++i) {
+        if (N%i == 0) {
+            long long cnt = 0;
+            while (N%i == 0) N /= i, cnt++;
+            ret.push_back({i,cnt});
+        }
+    }
+    if (N != 1) ret.push_back({N,1});
+    return ret;
+}
+
+
 int main() {
+    int H,W; cin >> H >> W;
+    vector<string> S(H);
+    for(int i = 0; i < H; ++i) {
+        cin >> S[i];
+    }
+    UnionFindTree uf(H*W);
+    for(int i = 0; i < H; ++i) {
+        for(int j = 0; j < W; ++j) {
+            if(S[i][j]!='o') continue;
+            if(i+1<H&&S[i+1][j]=='o') uf.unite(i*W+j,(i+1)*W+j);
+            if(j+1<W&&S[i][j+1]=='o') uf.unite(i*W+j,i*W+j+1);
+            if(i+1<H&&j+1<W&&S[i+1][j+1]=='o') uf.unite(i*W+j,(i+1)*W+j+1);
+            if(0<=i-1&&j+1<W&&S[i-1][j+1]=='o') uf.unite(i*W+j,(i-1)*W+j+1);
+        }
+    }
+    map<int,int> mp;
+    for(int i = 0; i < H; ++i) {
+        for(int j = 0; j < W; ++j) {
+            if(S[i][j]!='o') continue;
+            mp[uf.root(i*W+j)]++;
+        }
+    }
+    map<int,int> mp2;
+    for(auto& e:mp) {
+        auto P = PrimeFactorization(e.second);
+        int cnt=1;
+        for(auto p:P) if(p.second%2) cnt *= p.first;
+        mp2[cnt]++;
+    }
+    print(mp2[3],mp2[1],mp2[11]);
     return 0;
 }

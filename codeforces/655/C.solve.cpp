@@ -34,5 +34,49 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    SPEED
+    int T; cin >> T;
+    while(T--){
+        int N; cin >> N;
+        vector<ll> A(N);
+        int cnt = 0;
+        for(int i = 0; i < N; ++i) cin >> A[i];
+        for(int i = 0; i < N; ++i) if(A[i]==i+1) cnt++;
+        if(cnt==N) {
+            cout << 0 << endl;
+            continue;
+        }
+        cnt = 0;
+        int flg = 1;
+        for(int i = 0; i < N; ++i) {
+            if(flg && A[i]==i+1) {
+                A[i]=-1;
+            }
+            else {
+                flg = 0;
+            }
+        }
+        flg = 1;
+        for(int i = N-1; 0 <= i; --i) {
+            if(flg && A[i]==i+1) {
+                A[i]=-1;
+            }
+            else {
+                flg = 0;
+            }
+        }
+        int sum = 0;
+        for(int i = 0; i < N; ++i) {
+            if(A[i]==-1) continue;
+            if(A[i]==i+1) cnt++;
+            sum++;
+        }
+        if(cnt==0) {
+            cout << 1 << endl;
+        }
+        else{
+            cout << 2 << endl;
+        }
+    }
     return 0;
 }

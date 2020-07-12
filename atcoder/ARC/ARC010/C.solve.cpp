@@ -21,6 +21,7 @@ template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) 
 template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
+template <class T>ostream &operator<<(ostream &o, const deque<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
@@ -34,5 +35,39 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    ll N,M,Y,Z; cin >> N >> M >> Y >> Z;
+    vector<char> c(M+1);
+    vector<ll> p(M+1);
+    map<char,ll> mp;
+    mp['~']=-LOWINF;
+    for(int i = 0; i < M; ++i) {
+        cin >> c[i] >> p[i];
+        mp[c[i]]=p[i];
+    }
+    string S; cin >> S;
+    int cnt = 0;
+    for(auto& e:mp) {
+        p[cnt]=e.second;
+        e.second=cnt++;
+    }
+    auto dp = multivector(M+1,1<<(M+1),-LOWINF);
+    dp[M][0]=0;
+    for(auto& e:S) {
+        int x = mp[e];
+        auto tp = dp;
+        for(int i = 0; i < M+1; ++i) {
+            for(int j = 0; j < (1<<(M+1)); ++j) {
+                chmax(dp[x][j|(1<<x)],tp[i][j]+p[x]+(x==i)*Y);
+            }
+        }
+    }
+    ll ans = -LOWINF;
+    for(int i = 0; i < M+1; ++i) {
+        dp[i][(1<<M)-1]+=Z;
+        for(int j = 0; j < (1<<(M+1)); ++j) {
+            chmax(ans,dp[i][j]);
+        }
+    }
+    cout << ans << endl;
     return 0;
 }

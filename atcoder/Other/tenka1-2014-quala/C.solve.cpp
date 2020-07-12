@@ -34,5 +34,42 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int N,M; cin >> N >> M;
+    vector<string> VS(N);
+    for(int i = 0; i < N; ++i) cin >> VS[i];
+    auto b = multivector(N,N,0);
+    for(int i = 0; i < N; ++i) {
+        for(int j = 0; j < N; ++j) {
+            int flg = 1;
+            for(int k = 0; k < M; ++k) {
+                if(VS[i][k]=='*') continue;
+                if(VS[j][k]=='*') continue;
+                if(VS[j][k]!=VS[i][k]) {
+                    flg=0;
+                }
+            }
+            b[i][j]=flg;
+        }
+    }
+    vector<int> dp(1<<N,N+1);
+    for(int i = 0; i < (1<<N); ++i) {
+        int flg = 1;
+        for(int j = 0; j < N; ++j) {
+            for(int k = j+1; k < N; ++k) {
+                if(!(i&(1<<j))) continue;
+                if(!(i&(1<<k))) continue;
+                if(b[j][k]) continue;
+                flg=0;
+            }
+        }
+        if(flg) dp[i]=1;
+    }
+    for(int i = 0; i < (1<<N); ++i) {
+        int j = ((1<<N)-1)^i;
+        for(int k = j; 0 < k; k=(k-1)&j) {
+            chmin(dp[i^k],dp[i]+dp[k]);
+        }
+    }
+    cout << dp.back() << endl;
     return 0;
 }

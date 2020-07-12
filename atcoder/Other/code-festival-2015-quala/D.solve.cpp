@@ -34,5 +34,33 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
+    int N,M; cin >> N >> M;
+    vector<ll> X(M);
+    for(int i = 0; i< M; ++i) cin >> X[i];
+    ll ok=2*N,ng=-1,md;
+    while(ok-ng>1) {
+        md=(ok+ng)/2;
+        ll y = 0;
+        int flg = 1;
+        for(int i = 0; i < M; ++i) {
+            ll k = md;
+            if(y<X[i]) {
+                ll l = X[i]-(y+1);
+                if(k<l) {
+                    flg=0;
+                    break;
+                }
+                ll r1 = (k-l)/2;
+                ll r2 = (k-2*l);
+                y = X[i]+max(r1,r2);
+            }
+            else {
+                y = X[i]+k;
+            }
+        }
+        if(y<N) flg=0;
+        (flg?ok:ng)=md;
+    }    
+    cout << ok << endl;
     return 0;
 }
