@@ -32,6 +32,30 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+template<class T> class Combination{
+	vector<vector<T>> num;
+public:    
+    //O(N^2)
+    Combination(int N):num(N+1,vector<T>(N+1,(T)0)){
+		num[0][0] = 1;
+		for (int n = 1; n <= N; n++) {
+			for (int k = 0; k <= n; k++) {
+				num[n][k] = (num[n - 1][k]+(k?num[n - 1][k - 1]:0));
+			}
+		}
+    } 
+	inline T binom(int n, int k) {
+		return ((n < 0 || k < 0 || n < k) ? 0 : num[n][k]);
+	}
+    //nCk mod p (p is prime & p <= N)
+    inline T lucas(int n, int k, long long p) {
+        long long res=1;
+        for(;n||k;n/=p,k/=p) (res *= num[n%p][k%p]) %= p;
+        return res;
+    }
+};
+//https://atcoder.jp/contests/dwango2015-prelims/tasks/dwango2015_prelims_3
+
 int main() {
     SPEED
     int N; cin >> N;
@@ -40,15 +64,34 @@ int main() {
     for(int i = 0; i < N; ++i) A[i] = S[i]-'0';
     vector<vector<int>> c(4,vector<int>(4));
     for(int i = 0; i < 4; ++i) for(int j = 0; j < 4; ++j) c[i][j] = abs(i-j);
-    while(A.size()>1){
+    {
         vector<int> tmp;
         for(int i = 0; i+1 < A.size(); ++i){
-            if(i && A[i-1]==A[i] && A[i]==A[i+1]) continue;
-            if(c[A[i]][A[i+1]]) tmp.push_back(c[A[i]][A[i+1]]);
+            tmp.push_back(c[A[i]][A[i+1]]);
         }
         A = tmp;
     }
-    if(A.empty()) A.push_back(0);
-    cout << A.front() << endl;
+    Combination<int> CM(3);
+    corner(A.size()==1,A.front());
+    {
+        N = A.size();
+        int ans=0;
+        for(int i = 0; i < N; ++i) {
+            ans ^= (A[i]%2)*CM.lucas(N-1,i,2);
+        }
+        corner(ans,ans);
+    }
+    {
+        corner(find(A.begin(),A.end(),1)!=A.end(),0);
+    }
+    {
+        N = A.size();
+        int ans=0;
+        for(int i = 0; i < N; ++i) {
+            ans ^= A[i]*CM.lucas(N-1,i,2);
+        }
+        cout << ans << endl;
+    }
+
     return 0;
 }
