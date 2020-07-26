@@ -183,6 +183,7 @@ template<class T> struct NodeSimple {
 	inline static constexpr TypeNode func_node(TypeNode l,TypeNode c,TypeNode r){return 0;}
 };
 
+
 /*
  * @title ConvexHullTrick
  */
@@ -277,12 +278,12 @@ int main() {
 	//                   -> dp[j]+B/2*(i*i-2*i*j+j*j-i+j)-A*(i-j-1)+D[i]
 	//                   -> (-B*j)*i  +  dp[j]+B/2*(j*j+j)+A*j  +  B/2*(i*i-i)-A*(i-1)+D[i] 
 	ll dp=W;
-	ConvexHullTrick<ValueMin<ll>> cht;
-	cht.insert(0,dp);
+	ConvexHullTrick<ValueMax<ll>> cht;
+	cht.insert(0,-dp);
 	// cht.print();
 	for(ll i=1;i<=N+1;++i){
-		dp=cht.get(i)+B*(i*i-i)/2-A*(i-1)+D[i];
-		pair<long long,long long> line={-B*i,dp+B*(i*i+i)/2+A*i};
+		dp=-cht.get(i)+B*(i*i-i)/2-A*(i-1)+D[i];
+		pair<long long,long long> line={B*i,-(dp+B*(i*i+i)/2+A*i)};
 		// print(line);
 		// cht.print();
 		cht.insert(line);
