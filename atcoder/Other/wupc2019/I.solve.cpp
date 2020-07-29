@@ -1,7 +1,11 @@
 #include <iostream>
 #include <vector>
-#include <numeric>
+#include <queue>
+#include <map>
+#include <algorithm>
 using namespace std;
+using ll = long long;
+
 /*
  * @title Rbst
  */
@@ -204,6 +208,16 @@ public:
 		return y(lines.get(ok),x);
 	}
 
+	//O(log(N)^2)
+	pair<TypeValue,TypeValue> get_line(TypeValue x) {
+		int ng = -1, ok = (int)lines.size()-1, md;
+		while (ok - ng > 1) {
+			md = (ok + ng) >> 1;
+			( Operator::func_compare(y(lines.get(md),x),y(lines.get(md+1),x)) ?ok:ng)=md;
+		}
+		return lines.get(ok);
+	}
+
 	void print() {
 		lines.print();
 	}
@@ -212,7 +226,7 @@ public:
 //最小値クエリ
 template<class T> struct ValueMin {
 	using TypeValue = T;
-	inline static constexpr TypeValue unit_value = -3e18;
+	inline static constexpr TypeValue unit_value = 3e18;
 	inline static constexpr bool func_compare(TypeValue l,TypeValue r){return l<r;}
 };
 
@@ -223,30 +237,105 @@ template<class T> struct ValueMax {
 	inline static constexpr bool func_compare(TypeValue l,TypeValue r){return l>r;}
 };
 
-template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
-void print(void) {cout << endl;}
-template <class Head> void print(Head&& head) {cout << head;print();}
-template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
 
-int main(){
-	cin.tie(0);ios::sync_with_stdio(false);
-    int N,Q; cin >> N >> Q;
-	ConvexHullTrick<ValueMin<__int128_t>> cht;
-	while(N--){
-		long long a,b; cin >> a >> b;
-		cht.insert(a,b);
+/*
+ * @title ConvexHullTrickSegmentTree
+ */
+template<class Operator> class ConvexHullTrickSegmentTree {
+	using TypeValue = typename Operator::TypeValue;
+	using TypeNode = pair<TypeValue,TypeValue>;
+	size_t length;
+	size_t num;
+	vector<ConvexHullTrick<Operator>> node;
+public:
+	inline constexpr TypeValue y(const TypeNode p, TypeValue x) {
+		return p.first*x+p.second;
 	}
-	while(Q--){
-		int q; cin >> q;
-		if(q){
-			long long p; cin >> p;
-			long long ans = cht.get(p);
-			cout << ans << endl;
-		}
-		else{
-			long long a,b; cin >> a >> b;
-			cht.insert(a,b);
-		}
+	ConvexHullTrickSegmentTree(const size_t num): num(num) {
+		for (length = 1; length <= num; length *= 2);
+		node.resize(2 * length);
 	}
+	//[idx,idx+1) insert{ax+b}
+	void update(size_t idx, const TypeValue a, const TypeValue b) {
+		if(idx < 0 || length <= idx) return;
+		for(idx+=length;idx;idx >>= 1) node[idx].insert(a,b);
+	}
+	//[l,r)
+	TypeValue get(int l, int r, TypeValue x) {
+		if (l < 0 || length <= l || r < 0 || length < r) return Operator::unit_value;
+		TypeValue vl =  Operator::unit_value, vr = Operator::unit_value;
+		for(l += length, r += length; l < r; l >>=1, r >>=1) {
+			if(l&1) {
+				auto tl=node[l++].get(x);                
+				vl = (Operator::func_compare(vl,tl)?vl:tl);
+			}
+			if(r&1) {
+				auto tr=node[--r].get(x);                
+				vr = (Operator::func_compare(tr,vr)?tr:vr);
+			}
+		}
+		return (Operator::func_compare(vl,vr)?vl:vr);
+	}
+	//[l,r)
+	TypeNode get_line(int l, int r, TypeValue x) {
+		if (l < 0 || length <= l || r < 0 || length < r) return {0,Operator::unit_value};
+		TypeNode vl = {0,Operator::unit_value}, vr = {0,Operator::unit_value};
+		for(l += length, r += length; l < r; l >>=1, r >>=1) {
+			if(l&1) {
+				auto tl=node[l++].get_line(x);                
+				vl = (Operator::func_compare(y(vl,x),y(tl,x))?vl:tl);
+			}
+			if(r&1) {
+				auto tr=node[--r].get_line(x);                
+				vr = (Operator::func_compare(y(tr,x),y(vr,x))?tr:vr);
+			}
+		}
+		return (Operator::func_compare(y(vl,x),y(vr,x))?vl:vr);
+	}
+	void print(){
+		cout << "node" << endl;
+		for(int i = 1,j = 1; i < 2*length; ++i) {
+			node[i].print();
+			if(i==((1<<j)-1) && ++j) cout << endl;
+		}    
+	}
+};
+//https://atcoder.jp/contests/wupc2019/tasks/wupc2019_i
+
+template <class T> void chmin(T& a, const T b){a=min(a,b);}
+
+int main(void){
+    cin.tie(0);ios::sync_with_stdio(false);
+    ll N; cin >> N;
+    //区間[l,r)にある直線群の中で、あるxに対して最小値を取る直線を取得するセグメント木
+	int M=100002;
+    ConvexHullTrickSegmentTree<ValueMin<ll>> chtsegmin(M);
+    vector<ll> O(N),C(N),D(N),X(N),P(N);
+    vector<vector<int>> idx(M);
+	for(int i = 0; i < N; ++i) {
+		ll o,c,d,x;
+		cin >> o >> c >> d >> x;
+        if(c==-1) c=M-1;
+        O[i]=o,C[i]=c,D[i]=d,X[i]=x;
+        idx[o].push_back(i);
+	}
+	for(int i = 0; i < M; ++i) {
+        for(int j:idx[i]){
+            ll o,c,d,x;
+            o=O[j],c=C[j],d=D[j],x=X[j];
+            //p_i <= min((-2d_j)*d_i+(p_j+d_j^2) + d_i^2, x_i);
+            ll p = chtsegmin.get(o-1,M,d)+d*d;
+            chmin(p,x);
+            P[j]=p;
+        }
+        for(int j:idx[i]){
+            ll o,c,d,x,p;
+            o=O[j],c=C[j],d=D[j],x=X[j],p=P[j];
+            ll a = -2*d;
+            ll b = p+d*d;
+            chtsegmin.update(c,a,b);
+        }
+ 	}
+    for(auto& e:P) cout << e << endl;
+	return 0;
 }
-
