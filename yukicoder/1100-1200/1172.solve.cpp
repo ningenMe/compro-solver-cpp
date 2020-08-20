@@ -22,6 +22,7 @@ template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; f
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
+template <template <class tmp>  class T, class U> ostream &operator<<(ostream &o, const T<U> &obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr)o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
@@ -31,54 +32,31 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
-int mex(const vector<int>& A){
-    set<int> st;
-    for(int j:A) st.insert(j);
-    for(int j = 0; j <= A.size()+1; ++j) {
-        if(st.count(j)) continue;
-        else {
-            return j;
-        }
-    }
-}
 int main() {
-    int t; cin >> t;
-    while(t--){
-        int N; cin >> N;
-        vector<int> A(N);
-        for(int i = 0; i < N; ++i) cin >> A[i];
-        vector<int> ans;
-		while(1) {
-			int m = mex(A);
-			while(m!=N) {
-				A[m]=m;
-				ans.push_back(m);
-				m = mex(A);
-			}
-			int flg = 1;
-			for(int i = 0; i+1 < N; ++i) {
-				if(A[i]>A[i+1]) flg = 0;
-			}
-			if(flg) break;
-			int x;
-			for(int i = 0; i < N; ++i) {
-				if(A[i]!=i) {
-					x = i;
-					break;
-				}
-			}
-			for(int i = 0; i < N; ++i) {
-				if(A[i]==x) {
-					x = i;
-					break;
-				}
-			}
-			A[x]=m;
-			ans.push_back(x);
+	int K,N,M;
+	scanf("%d%d%d",&K,&N,&M);
+	array<ll,100001> A,X;
+	array<ll,201> C;
+	for(int i = 0; i < K; ++i) {
+		scanf("%d",&A[i]);
+	}
+	for(int i = 1; i <= K; ++i) {
+		scanf("%d",&C[i]);
+	}
+	for(int i = K; i <= N; ++i) {
+		for(int j = 1; j <= K; ++j) {
+			A[i] += (C[j]*A[i-j]) % MOD;
+			A[i] %= MOD;
 		}
-        cout << ans.size() << endl;
-        for(int i = 0; i < ans.size(); ++i) cout << ans[i]+1 << " ";
-        cout << endl;
-    }
+	}
+	for(int i = 0; i < M; ++i) {
+		int l,r; cin >> l >> r;
+		for(int j = l; j < r; ++j) {
+			(X[j] += A[j-l]) %= MOD;
+		}
+	}
+	for(int i = 0; i < N; ++i) {
+		printf("%ld\n",X[i]%MOD);
+	}
     return 0;
 }

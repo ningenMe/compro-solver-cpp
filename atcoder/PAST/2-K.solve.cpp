@@ -3,12 +3,9 @@ using namespace std;
 using ll = long long;
 
 #define ALL(obj) (obj).begin(),(obj).end()
-#define SPEED cin.tie(0);ios::sync_with_stdio(false);
+template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,greater<T>>;
 
-template<class T> using PQ = priority_queue<T>;
-template<class T> using PQR = priority_queue<T,vector<T>,greater<T>>;
-
-constexpr long long MOD = (long long)1e9 + 7;
+constexpr long long MOD = 1'000'000'000LL + 7;
 constexpr long long MOD2 = 998244353;
 constexpr long long HIGHINF = (long long)1e18;
 constexpr long long LOWINF = (long long)1e15;
@@ -27,20 +24,30 @@ template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
 template <class T> void chmax(T& a, const T b){a=max(a,b);}
 template <class T> void chmin(T& a, const T b){a=min(a,b);}
+vector<string> split(const string &str, const char delemiter) {vector<string> res;stringstream ss(str);string buffer; while( getline(ss, buffer, delemiter) ) res.push_back(buffer); return res;}
+int msb(int x) {return x?31-__builtin_clz(x):-1;}
 void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
-    SPEED
-    int t; cin >> t;
-    while(t--) {
-        int n; cin >> n;
-        vector<ll> A(n);
-        for(int i = 0; i < n; ++i) cin >> A[i], A[i]=abs(A[i]);
-        for(int i = 1; i < n; i+=2) A[i]*=-1;
-        for(int i = 0; i < n; ++i) cout << A[i] << " ";
-        cout << endl;
-    }
+    cin.tie(0);ios::sync_with_stdio(false);
+	int N; cin >> N;
+	string S; cin >> S;
+	vector<ll> C(N,0),D(N,0);
+	for(int i = 0; i < N; ++i) cin >> C[i];
+	for(int i = 0; i < N; ++i) cin >> D[i];
+	auto dp = multivector(N+1,N+1,LOWINF);
+	dp[0][0]=0;
+	for(int i = 0; i < N; ++i) {
+		for(int j = 0; j <= N; ++j) {
+			chmin(dp[i+1][j],dp[i][j]+D[i]);
+			if(S[i]=='(' && j+1<=N) chmin(dp[i+1][j+1],dp[i][j]);
+			if(S[i]=='(' && 0<=j-1) chmin(dp[i+1][j-1],dp[i][j]+C[i]);
+			if(S[i]==')' && j+1<=N) chmin(dp[i+1][j+1],dp[i][j]+C[i]);
+			if(S[i]==')' && 0<=j-1) chmin(dp[i+1][j-1],dp[i][j]);
+		}
+	}
+	cout << dp[N][0] << endl;
     return 0;
 }

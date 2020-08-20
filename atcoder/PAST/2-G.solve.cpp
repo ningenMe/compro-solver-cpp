@@ -27,33 +27,42 @@ template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
 template <class T> void chmax(T& a, const T b){a=max(a,b);}
 template <class T> void chmin(T& a, const T b){a=min(a,b);}
+std::vector<std::string> split(const std::string &str, const char delemiter) {std::vector<std::string> res;std::stringstream ss(str);std::string buffer; while( std::getline(ss, buffer, delemiter) ) res.push_back(buffer); return res;}
 void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
-    SPEED
-    int t; cin >> t;
-    while(t--){
-        int N,M; cin >> N >> M;
-        auto A = multivector(N,M,0);
-        for(int i = 0; i < N; ++i) for(int j = 0; j < M; ++j) cin >> A[i][j];
-        int flg = 1;
-        for(int i = 0; i < N; ++i) for(int j = 0; j < M; ++j) {
-            int cnt = 4;
-            if(i==0 || i==N-1) cnt--;
-            if(j==0 || j==M-1) cnt--;
-            if(cnt < A[i][j]) flg = 0;
-            else A[i][j]=cnt;
-        }
-        if(flg) {
-            cout << "YES" << endl;
-            for(int i = 0; i < N; ++i) {
-                for(int j = 0; j < M; ++j) cout << A[i][j] << " ";
-                cout << endl;
-            }
-        }
-        else cout << "NO" << endl;        
-    }
+	deque<pair<int,ll>> dq;
+	int Q; cin >> Q;
+	while(Q--) {
+		int q; cin >> q;
+		if(q==1) {
+			char c;
+			ll x;
+			cin >> c >> x;
+			dq.emplace_back(c-'a',x);
+		}
+		else{
+			ll d;
+			cin >> d;
+			vector<ll> cnt(26,0);
+			while(d){
+				if(dq.size()) {
+					ll mini = min(dq[0].second,d);
+					d -= mini;
+					dq[0].second -= mini;
+					cnt[dq[0].first]+=mini;
+					if(dq[0].second==0) dq.pop_front();
+				}
+				else {
+					break;
+				}
+			}
+			ll sum=0;
+			for(int i = 0; i < 26; ++i) sum += cnt[i]*cnt[i];
+			cout << sum << endl;
+		}
+	}
     return 0;
 }

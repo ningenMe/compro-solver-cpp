@@ -3,12 +3,9 @@ using namespace std;
 using ll = long long;
 
 #define ALL(obj) (obj).begin(),(obj).end()
-#define SPEED cin.tie(0);ios::sync_with_stdio(false);
+template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,greater<T>>;
 
-template<class T> using PQ = priority_queue<T>;
-template<class T> using PQR = priority_queue<T,vector<T>,greater<T>>;
-
-constexpr long long MOD = (long long)1e9 + 7;
+constexpr long long MOD = 1'000'000'000LL + 7;
 constexpr long long MOD2 = 998244353;
 constexpr long long HIGHINF = (long long)1e18;
 constexpr long long LOWINF = (long long)1e15;
@@ -27,24 +24,55 @@ template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
 template <class T> void chmax(T& a, const T b){a=max(a,b);}
 template <class T> void chmin(T& a, const T b){a=min(a,b);}
+vector<string> split(const string &str, const char delemiter) {vector<string> res;stringstream ss(str);string buffer; while( getline(ss, buffer, delemiter) ) res.push_back(buffer); return res;}
+int msb(int x) {return x?31-__builtin_clz(x):-1;}
 void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
-	int N; cin >> N;
-	vector<int> A(N);
-	for(int i = 0; i < N; ++i) cin >> A[i];
-	vector<set<int>> edge(N);
-	for(int i = 0; i < N; ++i) {
-		for(int j = i+1; j < N; ++j) {
-			if(A[i]>A[j]) {
-				edge[i].insert(j);
-				edge[j].insert(i);
+    cin.tie(0);ios::sync_with_stdio(false);
+	int H,W; cin >> H >> W;
+	vector<string> grid(H);
+	int sy,sx,gy,gx;
+	for(int i = 0; i < H; ++i) {
+		cin >> grid[i];
+		for(int j=0;j<W;++j) {
+			if(grid[i][j]=='S') sy=i,sx=j;
+			if(grid[i][j]=='G') gy=i,gx=j;
+		}
+	}
+	auto dp = multivector(H*W,10,LOWINF);
+	priority_queue_reverse<pair<pair<ll,int>,int>> pq;
+	pq.push({{0,0},sy*W+sx});
+	dp[sy*W+sx][0]=0;
+	int dy[4] = {-1,1,0,0};
+	int dx[4] = {0,0,-1,1};
+	while(pq.size()) {
+		auto p = pq.top(); pq.pop();
+		int y=p.second / W, x = p.second % W;
+		int maxi = -p.first.second;
+		for(int i=0;i<4;++i) {
+			int u=y+dy[i],v=x+dx[i];
+			if(!(0<=u&&u<H&&0<=v&&v<W)) continue;
+			int w;
+			if(grid[u][v]=='S'||grid[u][v]=='G') {
+				w = maxi;
+			}
+			else if((grid[u][v]-'0') == maxi + 1) {
+				w = maxi + 1;
+			}
+			else {
+				w = maxi;
+			}
+			if(dp[u*W+v][w] > dp[y*W+x][maxi]+1) {
+				dp[u*W+v][w] = dp[y*W+x][maxi]+1;
+				pq.push({{dp[u*W+v][w],-w},u*W+v});
 			}
 		}
 	}
-	auto B = A;
-	
+	ll ans = dp[gy*W+gx][9];
+	if(ans == LOWINF) ans = -1;
+	cout << ans << endl;
     return 0;
 }
