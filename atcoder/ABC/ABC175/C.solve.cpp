@@ -32,5 +32,13 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    ll X,K,D; cin >> X >> K >> D;
+    X = abs(X);
+    ll M = X / D;
+    corner(K <= M, abs(X-K*D));
+    K -= M;
+    X = abs(X-M*D);
+    if(K%2) X = abs(X-D);
+    cout << abs(X) << endl;
     return 0;
 }

@@ -32,5 +32,10 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    string S; cin >> S;
+    corner(S=="RRR",3);
+    corner(S=="RRS" || S=="SRR",2);
+    corner(S=="SSS",0);
+    cout << 1 << endl;
     return 0;
 }

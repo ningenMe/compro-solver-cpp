@@ -30,7 +30,20 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+void solve(){
+	int N; cin >> N;
+	vector<ll> A(N);
+	for(int i = 0; i < N; ++i) cin >> A[i];
+	int flg = 1;
+	for(int i = 0; i+1 < N; ++i) if(A[i] != A[i+1]) flg = 0;
+	cout << (flg?N:1) << endl;
+}
+
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+	int T; cin >> T;
+	while(T--) {
+		solve();
+	}
     return 0;
 }

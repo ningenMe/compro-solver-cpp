@@ -30,7 +30,28 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+void solve(){
+    ll N,K; cin >> N >> K;
+    vector<ll> A(N),B(N);
+    for(int i = 0; i < N; ++i) cin >> A[i];
+    ll maxi1 = *max_element(ALL(A));
+    for(int i = 0; i < N; ++i) A[i] = maxi1 - A[i];
+    ll maxi2 = *max_element(ALL(A));
+    for(int i = 0; i < N; ++i) B[i] = maxi2 - A[i];    
+    if(K&1) {
+        for(int i = 0; i < N; ++i) cout << A[i] << " ";
+    }
+    else{
+        for(int i = 0; i < N; ++i) cout << B[i] << " ";
+    }
+    cout << endl;
+}
+
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+	int T; cin >> T;
+	while(T--) {
+		solve();
+	}
     return 0;
 }

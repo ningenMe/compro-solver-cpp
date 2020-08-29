@@ -30,7 +30,72 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+ll calc(const vector<int>& A, int bit) {
+    int N = A.size();
+    auto dp = multivector(N,4,LOWINF);
+    int l = (bool)(bit&(1<<1));
+    int r = (bool)(bit&(1<<0));
+    dp[1][bit]=0;
+    if(l!=A[0]) dp[1][bit]++; 
+    if(r!=A[1]) dp[1][bit]++;
+
+    for(int i = 2; i < N; ++i) {
+        // LL:00 -> 01
+        chmin(dp[i][1],dp[i-1][0]+(A[i]!=1));
+
+        // LR:01 -> 10
+        chmin(dp[i][2],dp[i-1][1]+(A[i]!=0));
+        // LR:01 -> 11
+        chmin(dp[i][3],dp[i-1][1]+(A[i]!=1));
+
+        // RL:10 -> 00
+        chmin(dp[i][0],dp[i-1][2]+(A[i]!=0));
+        // RL:10 -> 01
+        chmin(dp[i][1],dp[i-1][2]+(A[i]!=1));
+
+        // RR:11 -> 10
+        chmin(dp[i][2],dp[i-1][3]+(A[i]!=0));
+    }
+    ll cnt = LOWINF;
+    if(bit==0) {
+        //LR,RR
+        chmin(cnt,dp[N-1][1]);
+        chmin(cnt,dp[N-1][3]);
+    }
+    if(bit==1) {
+        //LR,RR
+        chmin(cnt,dp[N-1][1]);
+        chmin(cnt,dp[N-1][2]);
+        chmin(cnt,dp[N-1][3]);
+    }
+    if(bit==2) {
+        //LR,RR
+        chmin(cnt,dp[N-1][0]);
+        chmin(cnt,dp[N-1][1]);
+        chmin(cnt,dp[N-1][2]);
+    }
+    if(bit==3) {
+        chmin(cnt,dp[N-1][0]);
+        chmin(cnt,dp[N-1][2]);
+    }
+    return cnt;
+}
+
+void solve(){
+	int N; cin >> N;
+    string S; cin >> S;
+    vector<int> A(N);
+    for(int i = 0; i < N; ++i) A[i]=(S[i]=='L'?0:1);
+    ll ans = LOWINF;
+    for(int i = 0; i < (1<<2); ++i) chmin(ans,calc(A,i));
+    cout << ans << endl;
+}
+
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+	int T; cin >> T;
+	while(T--) {
+		solve();
+	}
     return 0;
 }

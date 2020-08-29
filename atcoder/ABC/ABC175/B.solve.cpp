@@ -32,5 +32,23 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N; cin >> N;
+    vector<ll> L(N);
+    for(int i = 0; i < N; ++i) {
+        cin >> L[i];
+    }
+    ll ans = 0;
+    for(int i = 0; i < N; ++i) {
+        for(int j = i+1; j < N; ++j) {
+            for(int k = j+1; k < N; ++k) {
+                if(L[i]+L[j]<=L[k]) continue;
+                if(L[k]+L[i]<=L[j]) continue;
+                if(L[j]+L[k]<=L[i]) continue;
+                if(L[i]==L[j] || L[j]==L[k] || L[k]==L[i]) continue;
+                ans++;
+            }
+        }
+    }
+    cout << ans << endl;
     return 0;
 }

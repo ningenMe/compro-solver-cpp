@@ -32,5 +32,46 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int H,W,K; cin >> H >> W >> K;
+    auto grid = multivector(H,W,0LL);
+    for(int i = 0; i < K; ++i) {
+        int y,x,v;
+        cin >> y >> x >> v;
+        y--,x--;
+        grid[y][x]=v;
+    }
+    auto dp = multivector(H,W,4,0LL);
+    dp[0][0][1]+=grid[0][0];
+    for(int i = 0; i < H; ++i) {
+        for(int j = 0; j < W; ++j) {
+
+            if(i) {
+                //使わないとき
+                for(int k=0;k<=3;++k){
+                    chmax(dp[i][j][0],dp[i-1][j][k]);
+                }
+                //使うとき
+                for(int k=0;k<=3;++k){
+                    chmax(dp[i][j][1],dp[i-1][j][k]+grid[i][j]);
+                }
+            }
+
+            if(j) {
+                //使わないとき
+                for(int k=0;k<=3;++k){
+                    chmax(dp[i][j][k],dp[i][j-1][k]);
+                }
+                //使うとき
+                for(int k=0;k<=3;++k){
+                    if(k+1<=3)chmax(dp[i][j][k+1],dp[i][j-1][k]+grid[i][j]);
+                }
+            }
+        }
+    }
+    ll ans = 0;
+    for(int k=0;k<=3; ++k) {
+        chmax(ans,dp[H-1][W-1][k]);
+    }
+    cout << ans << endl; 
     return 0;
 }

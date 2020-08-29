@@ -32,5 +32,65 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N; cin >> N;
+    auto grid = multivector(N,N,0LL);
+
+    for(int j = 1; j < N; j += 2) {
+        for(int i = 0; i < N; ++i) {
+            grid[i][j] = 1;
+        }
+        // bit *= 2;
+    }
+    
+    ll bit = 1;
+    for(int i = 1; i < N; ++i) {
+        for(int j = 0; 0 <= i - j; ++j) {
+            grid[i-j][j] *= bit;
+        }
+        bit *= 2;
+    }
+
+    for(int j = 1; j < N; ++j) {
+        for(int i = 0; i+j < N && 0 <= N-1-i; ++i) {
+            grid[N-1-i][j+i] *= bit;
+        }
+        bit *= 2;
+    }
+
+
+    for(int i = 0; i < N; ++i) {
+        for(int j = 0; j < N; ++j) {
+            cout << grid[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    int Q; cin >> Q;
+    while(Q--) {
+        ll q; cin >> q;
+        vector<pair<int,int>> ans;
+        int y = 1,x = 1;
+        ans.emplace_back(y,x);
+        for(ll i = 0; i < 2*N-2; ++i) {
+            if(x%2==1) {
+                if(q&(1LL<<i)) {
+                    x++;
+                }
+                else{
+                    y++;
+                }
+            }
+            else {
+                if(q&(1LL<<i)) {
+                    y++;
+                }
+                else{
+                    x++;
+                }
+            }
+            ans.emplace_back(y,x);                    
+        }
+        for(auto& p:ans) cout << p.first << " " << p.second << endl;
+    }
     return 0;
 }

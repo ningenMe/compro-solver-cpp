@@ -7,7 +7,7 @@ template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,grea
 
 constexpr long long MOD = 1'000'000'000LL + 7;
 constexpr long long MOD2 = 998244353;
-constexpr long long HIGHINF = (long long)1e18;
+constexpr long long HIGHINF = (long long)2e18;
 constexpr long long LOWINF = (long long)1e15;
 constexpr long double PI = 3.1415926535897932384626433L;
 
@@ -32,5 +32,72 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    ll N,K; cin >> N >> K;
+    vector<int> P(N);
+    for(int i = 0; i < N; ++i) cin >> P[i],P[i]--;
+    vector<ll> C(N);
+    for(int i = 0; i < N; ++i) cin >> C[i];
+    vector<pair<ll,ll>> loop(N);
+    for(int i = 0; i < N; ++i) {
+        vector<pair<ll,ll>> tmp(N,{-1,0});
+        int from=i;
+        int to;
+        tmp[from]={0,0};
+        while(1) {
+            to = P[from];
+            auto tt=tmp[to];
+            tmp[to] = {C[to]+tmp[from].first,tmp[from].second+1};
+            if(tt.first!=-1) {
+                break;
+            }
+            from=to;
+        }
+        loop[i]=tmp[i];
+    }
+
+
+    ll ans = -HIGHINF;
+    for(int i = 0; i < N; ++i) {
+        int from = i;
+        ll cost = 0;
+        ll cnt = K;
+        cnt--;    
+
+        from = P[from];
+        cost += C[from];
+        chmax(ans,cost);
+        
+        ll cnt1 = cnt;
+        ll cost1 = cost;
+        ll from1 = from;
+        {
+            ll M = loop[from1].second;
+            if(loop[from1].first > 0) {
+                cost1 += (cnt1 / M) * loop[from1].first;
+            }
+            cnt1 %= M;
+            chmax(ans,cost1);
+            
+            while(cnt1--) {
+                from1 = P[from1];
+                cost1 += C[from1];
+                chmax(ans,cost1);
+            }
+        }
+
+        ll cnt2 = cnt;
+        ll cost2 = cost;
+        ll from2 = from;
+        {
+            ll M = loop[from2].second;
+            chmin(cnt2,M);
+            while(cnt2--) {
+                from2 = P[from2];
+                cost2 += C[from2];
+                chmax(ans,cost2);
+            }
+        }
+    }
+    cout << ans << endl;
     return 0;
 }

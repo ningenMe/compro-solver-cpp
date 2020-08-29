@@ -32,5 +32,36 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    ll N; cin >> N;
+    vector<ll> H(N);
+    for(int i = 0; i < N; ++i) {
+        cin >> H[i];
+    }
+    ll S = accumulate(ALL(H),0LL);
+    ll init = S;
+    ll ok = 0, ng = 1000'000'000'001LL, md, sum = 0;
+    while(ng - ok > 1) {
+        md = (ok+ng) / 2;
+        ll a = md, d = 1,n = N,l = a + n-1;
+        sum = ((2*a + (n-1)*d)*n) / 2;
+        (sum <= S ? ok:ng) = md;
+    }
+    H[0]=ok;
+    for(int i=1;i<N;++i) {
+        H[i] = H[i-1]+1;
+    }
+    S -= accumulate(ALL(H),0LL);
+    for(int i=0;i<N;++i) {
+        H[i] += S / N;
+    }
+    S %= N;
+    for(int i=0;i<S;++i) {
+        H[i]++;
+    }
+    for(int i = 0; i < N; ++i) {
+        cout << H[i] << " ";
+    }
+    cout << endl;
+
     return 0;
 }
