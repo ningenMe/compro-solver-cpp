@@ -1,129 +1,130 @@
-#include <iostream>
+#define PROBLEM "https://judge.yosupo.jp/problem/convolution_mod_1000000007"
+
 #include <vector>
+#include <iostream>
 #include <numeric>
+#include <algorithm>
+#include <array>
 using namespace std;
+
+/*
+ * @title ModInt
+ */
+template<long long mod> class ModInt {
+public:
+    long long x;
+    constexpr ModInt():x(0) {}
+    constexpr ModInt(long long y) : x(y>=0?(y%mod): (mod - (-y)%mod)%mod) {}
+    ModInt &operator+=(const ModInt &p) {if((x += p.x) >= mod) x -= mod;return *this;}
+    ModInt &operator+=(const long long y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    ModInt &operator+=(const int y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    ModInt &operator-=(const ModInt &p) {if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    ModInt &operator-=(const long long y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    ModInt &operator-=(const int y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    ModInt &operator*=(const ModInt &p) {x = (x * p.x % mod);return *this;}
+    ModInt &operator*=(const long long y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    ModInt &operator*=(const int y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    ModInt &operator^=(const ModInt &p) {x = (x ^ p.x) % mod;return *this;}
+    ModInt &operator^=(const long long y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    ModInt &operator^=(const int y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    ModInt &operator/=(const ModInt &p) {*this *= p.inv();return *this;}
+    ModInt &operator/=(const long long y) {ModInt p(y);*this *= p.inv();return *this;}
+    ModInt &operator/=(const int y) {ModInt p(y);*this *= p.inv();return *this;}
+    ModInt operator=(const int y) {ModInt p(y);*this = p;return *this;}
+    ModInt operator=(const long long y) {ModInt p(y);*this = p;return *this;}
+    ModInt operator-() const {return ModInt(-x); }
+    ModInt operator++() {x++;if(x>=mod) x-=mod;return *this;}
+    ModInt operator--() {x--;if(x<0) x+=mod;return *this;}
+    ModInt operator+(const ModInt &p) const { return ModInt(*this) += p; }
+    ModInt operator-(const ModInt &p) const { return ModInt(*this) -= p; }
+    ModInt operator*(const ModInt &p) const { return ModInt(*this) *= p; }
+    ModInt operator/(const ModInt &p) const { return ModInt(*this) /= p; }
+    ModInt operator^(const ModInt &p) const { return ModInt(*this) ^= p; }
+    bool operator==(const ModInt &p) const { return x == p.x; }
+    bool operator!=(const ModInt &p) const { return x != p.x; }
+    ModInt inv() const {int a=x,b=mod,u=1,v=0,t;while(b > 0) {t = a / b;swap(a -= t * b, b);swap(u -= t * v, v);} return ModInt(u);}
+    ModInt pow(long long n) const {ModInt ret(1), mul(x);for(;n > 0;mul *= mul,n >>= 1) if(n & 1) ret *= mul;return ret;}
+    friend ostream &operator<<(ostream &os, const ModInt &p) {return os << p.x;}
+    friend istream &operator>>(istream &is, ModInt &a) {long long t;is >> t;a = ModInt<mod>(t);return (is);}
+};
 
 /*
  * @title NumberTheoreticTransform
  */
-template<int mod, int root = 3> class NumberTheoreticTransform {
-	inline static constexpr long long gcd(long long a, long long b) {
-		return (b ? gcd(b, a % b):a);
+template<int mod> class NumberTheoreticTransform {
+	inline static constexpr int prime1 =1004535809;
+	inline static constexpr int prime2 =998244353;
+	inline static constexpr int prime3 =985661441;
+	inline static constexpr int inv21=332747959; // ModInt<mod2>(mod1).inv().x;
+	inline static constexpr int inv31=766625513; // ModInt<mod3>(mod1).inv().x;
+	inline static constexpr int inv32=657107549; // ModInt<mod3>(mod2).inv().x;
+	inline static constexpr int prime12=(1002772198720536577LL) % mod;
+	inline static constexpr array<int,21> pow2 = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576};
+	using Mint = ModInt<mod>;
+	using Mint1 = ModInt<prime1>;
+	using Mint2 = ModInt<prime2>;
+	using Mint3 = ModInt<prime3>;
+	inline Mint garner(const Mint1& b1,const Mint2& b2,const Mint3& b3) {
+		Mint2 t2 = (b2-b1.x)*inv21;
+		Mint3 t3 = ((b3-b1.x)*inv31-t2.x)*inv32;
+		return Mint(prime12*t3.x+b1.x+prime1*t2.x);
 	}
-	inline static long long ext_gcd(long long a, long long b, long long &x, long long &y) {
-		long long res;
-		if (b == 0) res = a,x = 1,y = 0;
-		else res = ext_gcd(b, a%b, y, x), y -= a/b * x;
-		return res;
-	}
-	inline static long long inv_mod(long long a, long long b) {
-		long long x, y;
-		ext_gcd(a, b, x, y);
-		return (x%b+b)%b;
-	}
-	inline static long long pow_mod(long long x, long long n, long long m) {
-		long long res = 1;
-		for (; n > 0; n >>= 1, (x *= x) %= m) if (n & 1) (res *= x) %= m;
-		return res;
-	}
-	inline static long long garner(vector<long long> b, vector<long long> m, long long d){
-		int N=b.size();
-		vector<long long> coe(N+1,1),val(N+1,0);
-		long long g,gl,gr,sum=accumulate(b.begin(),b.end(),0LL);
-		//互いに素になるように処理
-		for (int l = 0; l < N; ++l) {
-			for (int r = l+1; r < N; ++r) {
-				g = gcd(m[l], m[r]);
-				if (sum && (b[l] - b[r]) % g != 0) return -1;
-				m[l] /= g, m[r] /= g;
-				gl = gcd(m[l], g), gr = g/gl;
-				do {
-					g = gcd(gl, gr);
-					gl *= g, gr /= g;
-				} while (g != 1);
-				m[l] *= gl, m[r] *= gr;
-				b[l] %= m[l], b[r] %= m[r];
-			}
-		}
-		if(!sum) {
-			long long lcm = 1;
-			for(auto& e:m) (lcm*=e)%=d;
-			return lcm;
-		}
-		m.push_back(d);
-		for(int i = 0; i < N; ++i) {
-			long long t = (b[i] - val[i]) * inv_mod(coe[i], m[i]);
-			((t %= m[i]) += m[i]) %= m[i];
-			for (int j = i+1; j <= N; ++j) {
-				(val[j] += t * coe[j]) %= m[j];
-				(coe[j] *= m[i]) %= m[j];
-			}
-		}
-		return val.back();
-	}
-	inline static void ntt(vector<long long>& f,int sgn=1) {
-		int N = f.size();
-		int h = pow_mod(root, (mod - 1) / N, mod);
-		if (sgn == -1) h = inv_mod(h, mod);
-		for (int i = 0,j = 1; j < N - 1; ++j) {
-			for (int k = N >> 1; k > (i ^= k); k >>= 1);
-			if (j < i) swap(f[i], f[j]);
-		}
-		for (int i = 1,j = 2; i < N; i *= 2, j *= 2) {
-			long long w = 1, base = pow_mod(h, N / j, mod);
-			for(int k= 0;k < i; ++k, (w *= base) %= mod) {
-				for (int l = k; l < N; l += j) {
-					long long u = f[l];
-					long long d = f[l + i] * w % mod;
-					f[l] = u + d;
-					if (f[l] >= mod) f[l] -= mod;
-					f[l + i] = u - d;
-					if (f[l + i] < 0) f[l + i] += mod;
+	template<int prime> inline void ntt(vector<ModInt<prime>>& f) {
+		const int N = f.size(), M = N>>1;
+		const int log2N = __builtin_ctz(N);
+		ModInt<prime> h(3); h = h.pow((prime - 1)/N);
+		vector<ModInt<prime>> base(log2N),g(N);
+		for(int i=0;i<log2N;++i) base[i] = h.pow(N/pow2[i+1]);
+		for(int n=0;n<log2N;++n) {
+			const int& p = pow2[log2N-n-1];
+			ModInt<prime> w = 1;
+			for (int i=0,k=0;i<M;i+=p,k=i<<1,w*=base[n]) {
+				for(int j=0;j<p;++j) {
+					ModInt<prime> l = f[k|j];
+					ModInt<prime> r = w * f[k|j|p];
+					g[i|j]   = l + r;
+					g[i|j|M] = l - r;
 				}
 			}
+			swap(f,g);
 		}
-		for (auto& x : f) if (x < 0) x += mod;
 	}
-public:
-	inline static vector<long long> convolution(vector<long long> g,vector<long long> h){
-		int N; for(N=1;N<g.size()+h.size(); N*=2);
-		vector<long long> f(N);
-		g.resize(N); h.resize(N);
-		ntt(g);	ntt(h);
-		for(int i = 0; i < N; ++i) (f[i] = g[i]*h[i]) %= mod;
-		ntt(f,-1);
-		long long inv = inv_mod(N, mod);
-		for (auto& x : f) x = x * inv % mod;
+	template<int prime=mod> inline vector<ModInt<prime>> convolution(const vector<Mint>& a,const vector<Mint>& b){
+		int N,M=a.size()+b.size()-1; for(N=1;N<M;N*=2);
+		ModInt<prime> inverse(N); inverse = inverse.inv();
+		vector<ModInt<prime>> g(N,0),h(N,0);
+		for(int i=0;i<a.size();++i) g[i]=a[i].x;
+		for(int i=0;i<b.size();++i) h[i]=b[i].x;
+		ntt<prime>(g); ntt<prime>(h);
+		for(int i = 0; i < N; ++i) g[i] = g[i]*h[i]*inverse;
+		reverse(g.begin()+1,g.end());
+		ntt<prime>(g);
+		return g;
+	}
+	inline vector<Mint> convolution_arbitrarymod(const vector<Mint>& g,const vector<Mint>& h){
+		auto f1 = convolution<prime1>(g, h);
+		auto f2 = convolution<prime2>(g, h);
+		auto f3 = convolution<prime3>(g, h);
+		vector<Mint> f(f1.size());
+		for(int i=0; i < f1.size(); ++i) f[i] = garner(f1[i],f2[i],f3[i]);
 		return f;
 	}
-	inline static vector<long long> convolution_arbitrarymod(vector<long long> g, vector<long long> h){
-		for (auto& a : g) a %= mod;
-		for (auto& a : h) a %= mod;
-		const int mod1=167772161;
-		const int mod2=469762049;
-		const int mod3=1224736769;
-		auto x = NumberTheoreticTransform<mod1>::convolution(g, h);
-		auto y = NumberTheoreticTransform<mod2>::convolution(g, h);
-		auto z = NumberTheoreticTransform<mod3>::convolution(g, h);
-		vector<long long> res(x.size()),b(3),m(3);
-		for(int i=0; i < x.size(); ++i){
-			m[0] = mod1, b[0] = x[i];
-			m[1] = mod2, b[1] = y[i];
-			m[2] = mod3, b[2] = z[i];
-			res[i] = garner(b, m, mod);
-		}
-		return res;
-	}
+public:
+	inline vector<ModInt<998244353>> convolution(const vector<ModInt<998244353>>& g,const vector<ModInt<998244353>>& h){return convolution<998244353>(g,h);}
+	inline vector<ModInt<1000000007>> convolution(const vector<ModInt<1000000007>>& g,const vector<ModInt<1000000007>>& h){return convolution_arbitrarymod(g,h);}
 };
 
-int main(){
+constexpr int MOD = 998244353;
+
+int main(void){
 	cin.tie(0);ios::sync_with_stdio(false);
     int N,M; cin >> N >> M;
-    vector<long long> A(N),B(M);
+    vector<ModInt<MOD>> A(N),B(M);
     for(int i = 0; i < N; ++i) cin >> A[i];
     for(int i = 0; i < M; ++i) cin >> B[i];
-    auto C = NumberTheoreticTransform<998244353>::convolution(A,B);
+    NumberTheoreticTransform<MOD> ntt;
+	auto C = ntt.convolution(A,B);
     for(int i = 0; i < N+M-1; ++i) cout << C[i] << " ";
     cout << endl;
+	return 0;
 }
-
