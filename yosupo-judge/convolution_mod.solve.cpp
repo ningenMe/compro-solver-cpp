@@ -89,7 +89,7 @@ template<int mod> class NumberTheoreticTransform {
 			swap(f,g);
 		}
 	}
-	template<int prime=mod> inline vector<ModInt<prime>> convolution(const vector<Mint>& a,const vector<Mint>& b){
+	template<int prime=mod> inline vector<ModInt<prime>> convolution_friendrymod(const vector<Mint>& a,const vector<Mint>& b){
 		int N,M=a.size()+b.size()-1; for(N=1;N<M;N*=2);
 		ModInt<prime> inverse(N); inverse = inverse.inv();
 		vector<ModInt<prime>> g(N,0),h(N,0);
@@ -102,15 +102,15 @@ template<int mod> class NumberTheoreticTransform {
 		return g;
 	}
 	inline vector<Mint> convolution_arbitrarymod(const vector<Mint>& g,const vector<Mint>& h){
-		auto f1 = convolution<prime1>(g, h);
-		auto f2 = convolution<prime2>(g, h);
-		auto f3 = convolution<prime3>(g, h);
+		auto f1 = convolution_friendrymod<prime1>(g, h);
+		auto f2 = convolution_friendrymod<prime2>(g, h);
+		auto f3 = convolution_friendrymod<prime3>(g, h);
 		vector<Mint> f(f1.size());
 		for(int i=0; i < f1.size(); ++i) f[i] = garner(f1[i],f2[i],f3[i]);
 		return f;
 	}
 public:
-	inline vector<ModInt<998244353>> convolution(const vector<ModInt<998244353>>& g,const vector<ModInt<998244353>>& h){return convolution<998244353>(g,h);}
+	inline vector<ModInt<998244353>> convolution(const vector<ModInt<998244353>>& g,const vector<ModInt<998244353>>& h){return convolution_friendrymod<998244353>(g,h);}
 	inline vector<ModInt<1000000007>> convolution(const vector<ModInt<1000000007>>& g,const vector<ModInt<1000000007>>& h){return convolution_arbitrarymod(g,h);}
 };
 

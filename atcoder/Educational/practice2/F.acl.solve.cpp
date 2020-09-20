@@ -1,35 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
-using ll = long long;
 
-#define ALL(obj) (obj).begin(),(obj).end()
-template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,greater<T>>;
-
-constexpr long long MOD = 1'000'000'000LL + 7;
 constexpr long long MOD2 = 998244353;
-constexpr long long HIGHINF = (long long)1e18;
-constexpr long long LOWINF = (long long)1e15;
-constexpr long double PI = 3.1415926535897932384626433L;
-
-template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,init);}
-template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}
-template <class T> void corner(bool flg, T hoge) {if (flg) {cout << hoge << endl; exit(0);}}
-template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
-template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
-template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
-template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
-template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
-void print(void) {cout << endl;}
-template <class Head> void print(Head&& head) {cout << head;print();}
-template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
-template <class T> void chmax(T& a, const T b){a=max(a,b);}
-template <class T> void chmin(T& a, const T b){a=min(a,b);}
-vector<string> split(const string &str, const char delemiter) {vector<string> res;stringstream ss(str);string buffer; while( getline(ss, buffer, delemiter) ) res.push_back(buffer); return res;}
-int msb(int x) {return x?31-__builtin_clz(x):-1;}
-void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
-void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
-void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
-
 /*
  * @title ModInt
  */
@@ -83,16 +55,19 @@ template<int mod,int max_size=500000> class FormalPowerSeries{
 	inline static constexpr int inv32=657107549; // ModInt<mod3>(mod2).inv().x;
 	inline static constexpr int prime12=(1002772198720536577LL) % mod;
 	inline static constexpr array<int,21> pow2 = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576};
-    using Mint = ModInt<mod>;
-    using Fps  = FormalPowerSeries<mod,max_size>;
+	using Mint = ModInt<mod>;
 	using Mint1 = ModInt<prime1>;
 	using Mint2 = ModInt<prime2>;
 	using Mint3 = ModInt<prime3>;
-    vector<Mint> ar;
+    using Fps  = FormalPowerSeries<mod,max_size>;
     Fps even(void) const {Fps ret;for(int i = 0; i < this->size(); i+=2) ret.push_back((*this)[i]);return ret;}
     Fps odd(void)  const {Fps ret;for(int i = 1; i < this->size(); i+=2) ret.push_back((*this)[i]);return ret;}
     Fps minus_x(void) const {Fps ret(this->dimension());for(int i = 0; i < ret.size(); ++i) ret[i] = (*this)[i]*(i&1?-1:1);return ret;}
-	inline Mint garner(const Mint1& b1,const Mint2& b2,const Mint3& b3) {Mint2 t2 = (b2-b1.x)*inv21;Mint3 t3 = ((b3-b1.x)*inv31-t2.x)*inv32;return Mint(prime12*t3.x+b1.x+prime1*t2.x);}
+	inline Mint garner(const Mint1& b1,const Mint2& b2,const Mint3& b3) {
+		Mint2 t2 = (b2-b1.x)*inv21;
+		Mint3 t3 = ((b3-b1.x)*inv31-t2.x)*inv32;
+		return Mint(prime12*t3.x+b1.x+prime1*t2.x);
+	}
 	template<int prime> inline void ntt(vector<ModInt<prime>>& f) {
 		const int N = f.size(), M = N>>1;
 		const int log2N = __builtin_ctz(N);
@@ -104,14 +79,21 @@ template<int mod,int max_size=500000> class FormalPowerSeries{
 			ModInt<prime> w = 1;
 			for (int i=0,k=0;i<M;i+=p,k=i<<1,w*=base[n]) {
 				for(int j=0;j<p;++j) {
-					ModInt<prime> l = f[k|j],r = w * f[k|j|p];
-					g[i|j]   = l + r;g[i|j|M] = l - r;
+					ModInt<prime> l = f[k|j];
+					ModInt<prime> r = w * f[k|j|p];
+					g[i|j]   = l + r;
+					g[i|j|M] = l - r;
 				}
 			}
 			swap(f,g);
 		}
 	}
-	template<int prime=mod> inline vector<ModInt<prime>> convolution(const vector<Mint>& a,const vector<Mint>& b){
+	template<int prime=mod> inline vector<ModInt<prime>> convolution_friendrymod(const vector<Mint>& a,const vector<Mint>& b){
+		if (min(a.size(), b.size()) <= 60) {
+			vector<ModInt<prime>> f(a.size() + b.size() - 1);
+			for (int i = 0; i < a.size(); i++) for (int j = 0; j < b.size(); j++) f[i+j]+=a[i]*b[j];
+			return f;
+		}
 		int N,M=a.size()+b.size()-1; for(N=1;N<M;N*=2);
 		ModInt<prime> inverse(N); inverse = inverse.inv();
 		vector<ModInt<prime>> g(N,0),h(N,0);
@@ -121,24 +103,25 @@ template<int mod,int max_size=500000> class FormalPowerSeries{
 		for(int i = 0; i < N; ++i) g[i] = g[i]*h[i]*inverse;
 		reverse(g.begin()+1,g.end());
 		ntt<prime>(g);
-        if(g.size()>=max_size) g.resize(max_size);
+        if(g.size()>max_size) g.resize(max_size);
 		return g;
 	}
 	inline vector<Mint> convolution_arbitrarymod(const vector<Mint>& g,const vector<Mint>& h){
-		auto f1 = convolution<prime1>(g, h);
-		auto f2 = convolution<prime2>(g, h);
-		auto f3 = convolution<prime3>(g, h);
+		auto f1 = convolution_friendrymod<prime1>(g, h);
+		auto f2 = convolution_friendrymod<prime2>(g, h);
+		auto f3 = convolution_friendrymod<prime3>(g, h);
 		vector<Mint> f(f1.size());
 		for(int i=0; i < f1.size(); ++i) f[i] = garner(f1[i],f2[i],f3[i]);
 		return f;
 	}
-	inline vector<ModInt<998244353>> convolution(const vector<ModInt<998244353>>& g,const vector<ModInt<998244353>>& h){return convolution<998244353>(g,h);}
-	inline vector<ModInt<1000000007>> convolution(const vector<ModInt<1000000007>>& g,const vector<ModInt<1000000007>>& h){return convolution_arbitrarymod(g,h);}
 public:
-    //a0 + a_1*x^1 + a_2*x^2 + ... + a_(n-1)*x^(n-1) + a_n*x^n
+    vector<Mint> ar;
+	inline vector<ModInt<998244353>> convolution(const vector<ModInt<998244353>>& g,const vector<ModInt<998244353>>& h){return convolution_friendrymod(g,h);}
+	inline vector<ModInt<1000000007>> convolution(const vector<ModInt<1000000007>>& g,const vector<ModInt<1000000007>>& h){return convolution_arbitrarymod(g,h);}
+    //a0 + a_1*x^1 + a_2*x^2 + ... + a_(n-1)*x^(n-1)
     FormalPowerSeries(){}
-    FormalPowerSeries(int n):ar(n+1,0){}
-    FormalPowerSeries(int n,Mint a):ar(n+1,a){}
+    FormalPowerSeries(int n):ar(n,0){}
+    FormalPowerSeries(int n,Mint a):ar(n,a){}
     FormalPowerSeries(const vector<Mint>& v):ar(v){}
     FormalPowerSeries(initializer_list<Mint> v):ar(v){}
     /**
@@ -167,19 +150,19 @@ public:
     Mint operator[](size_t i) const {return ar[i];}
     Fps operator*(const Fps& r) const { return Fps(*this) *= r; }
     Fps &operator*=(const Fps& r) {return *this = convolution(this->ar,r.ar);}
-    Fps pow(long long n) const {Fps ret(0,1), mul(*this);for(;n > 0;mul *= mul,n >>= 1LL) if(n & 1LL) ret *= mul;return ret;}
+    Fps pow(long long n) const {Fps ret(1,1), mul(*this);for(;n > 0;mul *= mul,n >>= 1LL) if(n & 1LL) ret *= mul;return ret;}
     friend ostream &operator<<(ostream &os, const Fps& fps) {os << "{" << fps[0];for(int i=1;i<fps.size();++i) os << ", " << fps[i];return os << "}";}
 };
 
-using fps = FormalPowerSeries<MOD2,500000>;
-using modint = ModInt<MOD2>;
+using fps = FormalPowerSeries<MOD2,4000000>;
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
     int N,M; cin >> N >> M;
-    vector<modint> a(N);
+    fps a(N),b(M);
     for(int i = 0; i < N; ++i) cin >> a[i];
-    fps f(a); f = f.pow(M);
-    for(int i = 0; i < N; ++i) cout << f[i] << " "; cout << "\n";
+    for(int i = 0; i < M; ++i) cin >> b[i];
+    auto c = a*b;
+    for(int i = 0; i+1 < N+M; ++i) cout << c[i] << " "; cout << endl;
     return 0;
 }
