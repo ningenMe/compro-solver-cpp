@@ -1,12 +1,5 @@
-#define PROBLEM "https://judge.yosupo.jp/problem/convolution_mod_1000000007"
-
-#include <vector>
-#include <iostream>
-#include <numeric>
-#include <algorithm>
-#include <array>
+#include <bits/stdc++.h>
 using namespace std;
-
 
 constexpr long long MOD = 998244353;
 
@@ -51,6 +44,7 @@ public:
     friend istream &operator>>(istream &is, ModInt &a) {long long t;is >> t;a = ModInt<mod>(t);return (is);}
 };
 using modint = ModInt<MOD>;
+
 
 /*
  * @title FormalPowerSeries
@@ -150,31 +144,34 @@ public:
     Fps &operator*=(const int r) {for(int i=0;i< this->size(); ++i) (*this)[i] *= r; return *this; }
     Fps operator+(const Fps& r) const { return Fps(*this) += r; }
     Fps &operator+=(const Fps& r) {if(r.size() > this->size()) this->resize(r.size());for(int i = 0; i < r.size(); i++) (*this)[i] += r[i];return *this;}
+    Fps operator+(const int r) const {return Fps(*this) += r; }
+    Fps &operator+=(const int r) {for(int i=0;i< this->size(); ++i) (*this)[i] += r; return *this; }
+    Fps operator-(void) const {return Fps(*this) *= (-1);}
     Fps operator-(const Fps& r) const { return Fps(*this) -= r; }
     Fps &operator-=(const Fps& r) {if(r.size() > this->size()) this->resize(r.size());for(int i = 0; i < r.size(); i++) (*this)[i] -= r[i];return *this;}
+    Fps operator-(const int r) const {return Fps(*this) -= r; }
+    Fps &operator-=(const int r) {for(int i=0;i< this->size(); ++i) (*this)[i] -= r; return *this; }
+    Fps prefix(size_t n) const {return Fps(this->begin(),this->begin()+min(n,this->size()));}
     Fps pow(long long n) const {Fps ret(1,1), mul(*this);for(;n > 0;mul *= mul,n >>= 1LL) if(n & 1LL) ret *= mul;return ret;}
-    Fps inv(void) const {Fps ret({Mint(1)/(*this)[0]});for(size_t n=2;ret.size()<this->size();ret.resize(n),n<<=1) {ret *= Fps(1,2)-ret*(*this);}ret.resize(this->size());return ret;}
+    Fps inv(size_t n) const {Fps ret({Mint(1)/(*this)[0]});for(size_t i=1;i < n; i<<=1) ret = (ret*2-ret*(ret*(this->prefix(i<<1))).prefix(i<<1)).prefix(i<<1);return ret.prefix(n);}
+    Fps inv(void) const {return inv(this->size());}
     Fps diff(void) const {Fps ret(max(0,int(this->size())-1));for(int i=0;i<ret.size(); ++i) ret[i]=(*this)[i+1]*(i+1);return ret;}
     Fps intg(void) const {Fps ret(this->size()+1);for(int i=1;i<ret.size(); ++i) ret[i]=(*this)[i-1]/i;return ret;}
-    Fps log(void) const {Fps ret = (this->diff()*this->inv());ret = ret.intg(); ret.resize(this->size());return ret;}
-    Fps exp(void) const {
-        Fps ret(1,1);
-        for(size_t n=2;ret.size()<this->size();ret.resize(n),n<<=1) {ret *= ((*this) + Fps(1,1) - ret.log());}
-        ret.resize(this->size());
-        return ret;}
+    Fps log(size_t n) const {return (this->diff()*this->inv(n)).intg().prefix(n);}
+    Fps log(void) const {return log(this->size());}
+    Fps exp(size_t n) const {Fps ret(1,1);for(size_t i=1;i<n;i<<=1) ret = (ret*(this->prefix(i<<1) + Fps(1,1) - ret.log(i<<1))).prefix(i<<1);return ret.prefix(n);}
+    Fps exp(void) const {return exp(this->size());}
     friend ostream &operator<<(ostream &os, const Fps& fps) {os << "{" << fps[0];for(int i=1;i<fps.size();++i) os << ", " << fps[i];return os << "}";}
 };
 
 using fps = FormalPowerSeries<MOD>;
 
-int main(void){
-	cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; cin >> N >> M;
-    fps A(N),B(M);
-    for(int i = 0; i < N; ++i) cin >> A[i];
-    for(int i = 0; i < M; ++i) cin >> B[i];
-	auto C = A*B;
-    for(int i = 0; i < N+M-1; ++i) cout << C[i] << " ";
-    cout << endl;
-	return 0;
+int main() {
+    cin.tie(0);ios::sync_with_stdio(false);
+    int N; cin >> N;
+    fps f(N);
+    for(int i=0;i<N;++i) cin >> f[i];
+    f = f.exp();
+    for(int i=0;i<f.size();++i) cout << f[i] << " \n"[i==N-1];
+    return 0;
 }
