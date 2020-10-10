@@ -5,7 +5,7 @@ using ll = long long;
 #define ALL(obj) (obj).begin(),(obj).end()
 template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,greater<T>>;
 
-constexpr long long MOD = 1'000'000'000LL + 7;
+constexpr long long MOD = 1'000'000'000LL + 7; //'
 constexpr long long MOD2 = 998244353;
 constexpr long long HIGHINF = (long long)1e18;
 constexpr long long LOWINF = (long long)1e15;

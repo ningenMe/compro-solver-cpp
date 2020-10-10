@@ -5,7 +5,7 @@ using ll = long long;
 #define ALL(obj) (obj).begin(),(obj).end()
 template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,greater<T>>;
 
-constexpr long long MOD = 1'000'000'000LL + 7; //'
+constexpr long long MOD = 1'000'000'000LL + 7;
 constexpr long long MOD2 = 998244353;
 constexpr long long HIGHINF = (long long)1e18;
 constexpr long long LOWINF = (long long)1e15;
@@ -32,5 +32,14 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    string S; cin >> S;
+    string T; cin >> T;
+    if(S=="Y") {
+        for(auto& c:T) c = toupper(c);
+        cout << T << endl;
+    }
+    else {
+        cout << T << endl;
+    }
     return 0;
 }
