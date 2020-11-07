@@ -30,57 +30,82 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
-template<class T> class RectangleUnion{
-    int H,W;
-    vector<tuple<int,int,int,int,T>> query;
-    vector<T> grid;
+template<class T> class Zarts{
+    vector<T> value;
+    map<T,int> key;
+    size_t sz;
 public:
-    RectangleOverlapsWeight(int H,int W):H(H),W(W),grid(H*W){
-    }
-    //[y1,y2)*[x1,x2)の矩形、均質重みw
-    void make_query(int y1,int x1,int y2,int x2,T w=1) {
-        query.emplace_back(y1,x1,y2,x2,w);
-    }
-    void solve() {
-        for(const auto& q:query) {
-            int y1 = std::get<0>(q);
-            int x1 = std::get<1>(q);
-            int y2 = std::get<2>(q);
-            int x2 = std::get<3>(q);
-            T   w  = std::get<4>(q);
-            grid[y1*W+x1] += w;
-            grid[y1*W+x2] -= w;
-            grid[y2*W+x1] -= w;
-            grid[y2*W+x2] += w;
+    vector<T> compressed;
+    Zarts(const vector<T> & ar, int light_flag = 0, T pre=-1) : compressed(ar.size()) {
+        if(!light_flag) {
+            for (auto &e : ar) key[e];
+            int cnt=0;
+            for (auto &e : key) e.second = cnt++;
+            for (int i=0;i<ar.size();++i) compressed[i]=key[ar[i]];
+            value.resize(key.size());
+            for (auto &e : key) value[e.second] = e.first;
+            sz = cnt;
         }
-        for(int y=0;y<H;++y) {
-            for(int x=0;x+1<W;++x) {
-                grid[y*W+x+1] += grid[y*W+x];
+        else {
+            vector<pair<int,int>> ord(ar.size());
+            for(int i=0;i<ar.size();++i) ord[i]={ar[i],i};
+            sort(ord.begin(),ord.end());
+            int cnt=-1;
+            for(int i=0;i<ar.size();++i) {
+                if(pre < ord[i].first) cnt++;
+                compressed[ord[i].second] = cnt;
+                pre = ord[i].first;
             }
-        }
-        for(int x=0;x<W;++x) {
-            for(int y=0;y+1<H;++y) {
-                grid[(y+1)*W+x] += grid[y*W+x];
-            }
+            sz = cnt+1;
         }
     }
-    T get(int y,int x) {
-        return grid[y*W+x];
+    T get_value(int key) {
+        return value[key];
+    }
+    int get_key(T value) {
+        assert(key.count(value));
+        return key[value];
+    }
+    size_t size() {
+        return sz;
     }
 };
 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
     int N; cin >> N;
-    int L = 1010;
-    RectangleOverlapsWeight<int> rol(L,L);
-    while(N--) {
-        int x1,y1,x2,y2; cin >> x1 >> y1 >> x2 >> y2;
-        rol.make_query(y1,x1,y2,x2,1);
+    vector<ll> x(N*2),y(N*2);
+    for(int i=0;i<N;++i) {
+        cin >> x[i*2+0];
+        cin >> y[i*2+0];
+        cin >> x[i*2+1];
+        cin >> y[i*2+1];
     }
-    rol.solve();
-    int ans = 0;
-    for(int i=0;i<L;++i) for(int j=0;j<L;++j) chmax(ans,rol.get(i,j));
+    Zarts<ll> Zx(x),Zy(y);
+    auto grid = multivector(Zy.size(),Zx.size(),0LL);
+    for(int i=0;i<N;++i) {
+        ll x1=Zx.compressed[i*2+0],y1=Zy.compressed[i*2+0],x2=Zx.compressed[i*2+1],y2=Zy.compressed[i*2+1];
+        grid[y1][x1]++;
+        grid[y1][x2]--;
+        grid[y2][x1]--;
+        grid[y2][x2]++;
+    }    
+    for(int i=0;i<Zy.size();++i) {
+        for(int j=1;j<Zx.size();++j) {
+            grid[i][j] += grid[i][j-1];
+        }
+    }
+    for(int j=0;j<Zx.size();++j) {
+        for(int i=1;i<Zy.size();++i) {
+            grid[i][j] += grid[i-1][j];
+        }
+    }
+    ll ans = 0;
+    for(int i=0;i+1<Zy.size();++i) {
+        for(int j=0;j+1<Zx.size();++j) {
+            if(grid[i][j]) ans += (Zy.get_value(i+1)-Zy.get_value(i))*(Zx.get_value(j+1)-Zx.get_value(j));
+        }
+    }
     cout << ans << endl;
     return 0;
 }
