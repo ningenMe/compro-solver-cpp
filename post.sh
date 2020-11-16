@@ -21,6 +21,6 @@ do
   
   curl="curl -X POST -H ${header1} -H ${header2} -d $json $host"
   eval ${curl}
-  echo ""
+  echo $url
 done
 
