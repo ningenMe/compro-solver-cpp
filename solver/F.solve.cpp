@@ -30,6 +30,10 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/**
+ * @url 
+ * @est
+ */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
     return 0;
