@@ -30,29 +30,46 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
-void solve(){
-    int N; cin >> N;
-    vector<ll> A(N);
-    for(int i=0;i<N;++i) cin >> A[i];
-    sort(ALL(A));
-    int flg = !(N&1);
-    if(N%2==0) {
-        int flg2=1;
-        for(int i=0;i<N;i+=2) if(A[i]!=A[i+1]) flg2=0;
-        if(flg2) flg = 0;
-    }
-    cout << (flg?"First":"Second") << endl;
-}
+/*
+ * @title NBase - N進数
+ * @docs md/util/NBase.md
+ */
+class NBase{
+public:
+	inline static vector<long long> translate(long long X,long long N) {
+		assert(abs(N)>1);
+		vector<long long> res;
+		while(1) {
+			long long b = (X%abs(N)+abs(N)) % abs(N);
+			res.push_back(b);
+			(X -= b) /= N;
+			if(X==0) break;
+		}
+		return res;
+	}
+	//Digit Sum
+	inline static constexpr long long digit_sum(long long N, long long K) {
+		long long sum = 0;
+		for (; N > 0; N /= K) sum += N % K;
+		return sum;
+	}
+};
 
-/**
- * @url https://atcoder.jp/contests/arc105/tasks/arc105_d
- * @est
- */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int T; cin >> T;
-    while(T--) {
-        solve();
+    string S; cin >> S;
+    int N = S.size();
+    ll ans = 20;
+    for(int i=1; i < (1<<N); ++i) {
+        string T = "";
+        for(int j=0;j < N;++j) if(i&(1LL<<j)) T += S[j];
+        ll X = stoll(T);
+        if(X%3==0) {
+            chmin(ans,N-NBase::digit_sum(i,2));
+        }
     }
+    if(ans == 20) ans = -1;
+    cout << ans << endl;
+
     return 0;
 }

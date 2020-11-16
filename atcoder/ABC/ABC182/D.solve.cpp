@@ -30,132 +30,73 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
-
 /*
- * @title SparseTable
- * @docs md/segment/SparseTable.md
+ * @title DisjointSparseTable
+ * @docs md/segment/DisjointSparseTable.md
  */
-template<class Operator> class SparseTable{
+template<class Operator> class DisjointSparseTable{
 public:
 	using TypeNode = typename Operator::TypeNode;
-	vector<TypeNode> node;
-	vector<int> idx;
 	size_t depth;
 	size_t length;
+	vector<TypeNode> node;
+	vector<size_t> msb;
 
-	SparseTable(void) {
-
-	}
-
-	SparseTable(const vector<TypeNode>& vec) {
+	DisjointSparseTable(const vector<TypeNode>& vec) {
 		for(depth = 0;(1<<depth)<=vec.size();++depth);
 		length = (1<<depth);
-		node.resize(depth*length);
+		
+		//msb
+		msb.resize(length,0);
+		for(int i = 0; i < length; ++i) for(int j = 0; j < depth; ++j) if(i>>j) msb[i] = j;
+
+		//init value
+		node.resize(depth*length,Operator::unit_node);
 		for(int i = 0; i < vec.size(); ++i) node[i] = vec[i];
-		for(int i = 1; i < depth; ++i) for(int j = 0; j + (1<<i) < (1<<depth); ++j) node[i*length+j] = Operator::func_node(node[(i-1)*length+j],node[(i-1)*length+j + (1 << (i-1))]);
-		idx.resize(vec.size()+1);
-		for(int i = 2; i < vec.size()+1; ++i) idx[i] = idx[i>>1] + 1;
+
+		for(int i = 1; i < depth; ++i) {
+			for(int r = (1<<i),l = r-1; r < length; r += (2<<i),l = r-1){
+				//init accumulate
+				node[i*length+l] = node[l];
+				node[i*length+r] = node[r];
+				//accumulate
+				for(int k = 1; k < (1<<i); ++k) {
+					node[i*length+l-k] = Operator::func_node(node[i*length+l-k+1],node[l-k]);
+					node[i*length+r+k] = Operator::func_node(node[i*length+r+k-1],node[r+k]);
+				}
+			}
+		}
 	}
 
 	//[l,r)
 	TypeNode get(int l,int r) {
-		int bit = idx[r-l];
-		return Operator::func_node(node[bit*length+l],node[bit*length+r - (1<<bit)]);
+		r--;
+		return (l>r||l<0||length<=r) ? Operator::unit_node: (l==r ? node[l] : Operator::func_node(node[msb[l^r]*length+l],node[msb[l^r]*length+r]));
 	}
 };
 
-template<class T> struct NodeMax {
+//sum
+template<class T> struct NodeSum {
 	using TypeNode = T;
-	inline static constexpr TypeNode unitNode = 0;
-	inline static constexpr TypeNode func_node(TypeNode l,TypeNode r){return max(l,r);}
+	inline static constexpr TypeNode unit_node = 0;
+	inline static constexpr TypeNode func_node(TypeNode l,TypeNode r){return l+r;}
 };
 
-int N,M; 
-vector<ll> W,X,V;
-SparseTable<NodeMax<ll>> spt;
-
-ll ans = LOWINF;
-
-ll check_dist(const vector<int>& idx,const vector<ll>& dist,int n) {
-    int K = idx.size();
-    ll d = 0;
-    ll len_sum = 0, weight_sum = W[n];
-    for(int i=K-1; 0 <= i; --i) {
-        weight_sum += W[idx[i]];
-        int j = lower_bound(ALL(V),weight_sum)-V.begin();
-        ll maxi_len;
-        if(j) {
-            maxi_len = spt.get(0,j);
-        }
-        else {
-            maxi_len = 0;
-        }
-
-        if(maxi_len > len_sum) {
-            chmax(d,maxi_len-len_sum);
-        }
-        len_sum += dist[i];
-    }
-    return d;
-}
-
-void dfs(vector<int>& idx,vector<ll>& dist, set<int>& st) {
-
-    
-    if(idx.size()==N) {
-        chmin(ans,accumulate(ALL(dist),0LL));
-        return;
-    }
-
-    for(int i=0;i<N;++i) {
-        if(st.count(i)) continue;
-
-        ll d = check_dist(idx,dist,i);
-
-        idx.push_back(i);
-        dist.push_back(d);
-        st.insert(i);
-
-        dfs(idx,dist,st);
-
-        idx.pop_back();
-        dist.pop_back();
-        st.erase(i);
-    }
-
-}
-
-/**
- * @url https://atcoder.jp/contests/arc105/tasks/arc105_c
- * @est 500
- */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    cin >> N >> M;
-    W.resize(N);
-    X.resize(M);
-    V.resize(M);
-    for(int i=0;i<N;++i) cin >> W[i];
-    for(int i=0;i<M;++i) cin >> X[i] >> V[i];
+    ll N; cin >> N;
+    vector<ll> A(N+1,0),B(N+1,0);
+    for(int i=1;i<=N;++i) cin >> A[i];
+    for(int i=1;i<=N;++i) A[i] += A[i-1];
+    B = A;
+    for(int i=1;i<=N;++i) chmax(B[i],B[i-1]);
 
-    vector<pair<ll,ll>> ord(M);
-    for(int i=0;i<M; ++i) ord[i] = {V[i],X[i]};
-    sort(ALL(ord));
-    for(int i=0;i<M; ++i) V[i]=ord[i].first,X[i]=ord[i].second;
-
-
-
-    spt = SparseTable<NodeMax<ll>>(X);
-
-    corner(*max_element(ALL(W)) > *min_element(ALL(V)),-1);
-
-
-    for(int i=0;i<N;++i) {
-        vector<int> idx = {i};
-        vector<ll> dist = {0};
-        set<int> st;
-        st.insert(i);
-        dfs(idx,dist,st);
+    ll ans = 0;
+    ll sum = 0;
+    for(int i = 1; i <= N; ++i) {
+        chmax(ans,sum+B[i]);
+        sum += A[i];
+        chmax(ans,sum);
     }
     cout << ans << endl;
     return 0;

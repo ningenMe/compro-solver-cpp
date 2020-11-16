@@ -30,29 +30,9 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
-void solve(){
-    int N; cin >> N;
-    vector<ll> A(N);
-    for(int i=0;i<N;++i) cin >> A[i];
-    sort(ALL(A));
-    int flg = !(N&1);
-    if(N%2==0) {
-        int flg2=1;
-        for(int i=0;i<N;i+=2) if(A[i]!=A[i+1]) flg2=0;
-        if(flg2) flg = 0;
-    }
-    cout << (flg?"First":"Second") << endl;
-}
-
-/**
- * @url https://atcoder.jp/contests/arc105/tasks/arc105_d
- * @est
- */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int T; cin >> T;
-    while(T--) {
-        solve();
-    }
+    int A,B; cin >> A >> B;
+    cout << (2*A+100) - B << endl;
     return 0;
 }
