@@ -38,48 +38,124 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;} 
 
 /*
- * @title UnionFindTree - Union Find 木
- * @docs md/graph/UnionFindTree.md
+ * @title SegmentTree - 非再帰抽象化セグメント木
+ * @docs md/data-structure/segment-tree/SegmentTree.md
  */
-class UnionFindTree {
-	vector<int> parent,maxi,mini;
-	inline int root(int n) {
-		return (parent[n]<0?n:parent[n] = root(parent[n]));
-	}
+template<class Monoid> class SegmentTree {
+    using TypeNode = typename Monoid::TypeNode; 
+    size_t length;
+    size_t num;
+    vector<TypeNode> node;
+    vector<pair<int,int>> range;
+    inline void build() {
+        for (int i = length - 1; i >= 0; --i) node[i] = Monoid::func_fold(node[(i<<1)+0],node[(i<<1)+1]);
+        range.resize(2 * length);
+        for (int i = 0; i < length; ++i) range[i+length] = make_pair(i,i+1);
+        for (int i = length - 1; i >= 0; --i) range[i] = make_pair(range[(i<<1)+0].first,range[(i<<1)+1].second);
+    }
 public:
-	UnionFindTree(int N = 1) : parent(N,-1),maxi(N),mini(N){
-		iota(maxi.begin(),maxi.end(),0);
-		iota(mini.begin(),mini.end(),0);
-	}
-	inline bool connected(int n, int m) {
-		return root(n) == root(m);
-	}
-	inline void merge(int n, int m) {
-		n = root(n);
-		m = root(m);
-		if (n == m) return;
-		if(parent[n]>parent[m]) swap(n, m);
-		parent[n] += parent[m];
-		parent[m] = n;
-		maxi[n] = std::max(maxi[n],maxi[m]);
-		mini[n] = std::min(mini[n],mini[m]);
-	}
-	inline int min(int n) {
-		return mini[root(n)];
-	}
-	inline int max(int n) {
-		return maxi[root(n)];
-	}
-	inline int size(int n){
-		return (-parent[root(n)]);
-	}
-	inline int operator[](int n) {
-		return root(n);
-	}
-	inline void print() {
-		for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
-		cout << endl;
-	}
+
+    //unitで初期化
+    SegmentTree(const size_t num): num(num) {
+        for (length = 1; length <= num; length *= 2);
+        node.resize(2 * length, Monoid::unit_node);
+        build();
+    }
+
+    //vectorで初期化
+    SegmentTree(const vector<TypeNode> & vec) : num(vec.size()) {
+        for (length = 1; length <= vec.size(); length *= 2);
+        node.resize(2 * length, Monoid::unit_node);
+        for (int i = 0; i < vec.size(); ++i) node[i + length] = vec[i];
+        build();
+    }
+ 
+    //同じinitで初期化
+    SegmentTree(const size_t num, const TypeNode init) : num(num) {
+        for (length = 1; length <= num; length *= 2);
+        node.resize(2 * length, Monoid::unit_node);
+        for (int i = 0; i < length; ++i) node[i+length] = init;
+        build();
+    }
+    
+    //[idx,idx+1)
+    void operate(size_t idx, const TypeNode var) {
+        if(idx < 0 || length <= idx) return;
+        idx += length;
+        node[idx] = Monoid::func_operate(node[idx],var);
+        while(idx >>= 1) node[idx] = Monoid::func_fold(node[(idx<<1)+0],node[(idx<<1)+1]);
+    }
+
+    //[l,r)
+    TypeNode fold(int l, int r) {
+        if (l < 0 || length <= l || r < 0 || length < r) return Monoid::unit_node;
+        TypeNode vl = Monoid::unit_node, vr = Monoid::unit_node;
+        for(l += length, r += length; l < r; l >>=1, r >>=1) {
+            if(l&1) vl = Monoid::func_fold(vl,node[l++]);
+            if(r&1) vr = Monoid::func_fold(node[--r],vr);
+        }
+        return Monoid::func_fold(vl,vr);
+    }
+
+    //range[l,r) return [l,r] search max right
+    int prefix_binary_search(int l, int r, TypeNode var) {
+        assert(0 <= l && l < length && 0 < r && r <= length);
+        TypeNode ret = Monoid::unit_node;
+        size_t off = l;
+        for(size_t idx = l+length; idx < 2*length && off < r; ){
+            if(range[idx].second<=r && !Monoid::func_check(Monoid::func_fold(ret,node[idx]),var)) {
+                ret = Monoid::func_fold(ret,node[idx]);
+                off = range[idx++].second;
+                if(!(idx&1)) idx >>= 1;			
+            }
+            else{
+                idx <<=1;
+            }
+        }
+        return off;
+    }
+
+    //range(l,r] return [l,r] search max left
+    int suffix_binary_search(const int l, const int r, const TypeNode var) {
+        assert(-1 <= l && l < (int)length-1 && 0 <= r && r < length);
+        TypeNode ret = Monoid::unit_node;
+        int off = r;
+        for(size_t idx = r+length; idx < 2*length && l < off; ){
+            if(l < range[idx].first && !Monoid::func_check(Monoid::func_fold(node[idx],ret),var)) {
+                ret = Monoid::func_fold(node[idx],ret);
+                off = range[idx--].first-1;
+                if(idx&1) idx >>= 1;
+            }
+            else{
+                idx = (idx<<1)+1;
+            }
+        }
+        return off;
+    }
+
+    void print(){
+        // cout << "node" << endl;
+        // for(int i = 1,j = 1; i < 2*length; ++i) {
+        // 	cout << node[i] << " ";
+        // 	if(i==((1<<j)-1) && ++j) cout << endl;
+        // }
+        cout << "vector" << endl;
+        cout << "{ " << fold(0,1);
+        for(int i = 1; i < length; ++i) cout << ", " << fold(i,i+1);
+        cout << " }" << endl;
+    }
+};
+
+/*
+ * @title MonoidRangeMinPointUpdate - [区間min, 点更新]
+ * @docs md/operator/monoid/MonoidRangeMinPointUpdate.md
+ */
+template<class T> struct MonoidRangeMinPointUpdate {
+    using TypeNode = T;
+    inline static constexpr TypeNode unit_node = LOWINF;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return min(l,r);}
+    inline static constexpr TypeNode func_operate(TypeNode l,TypeNode r){return r;}
+    inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var > nodeVal;}
 };
 
 /*
@@ -141,55 +217,25 @@ template<class T> struct NodeSum {
 int main() { 
     cin.tie(0);ios::sync_with_stdio(false);
     int N; cin >> N;
-    vector<int> P(N);
+    vector<int64> P(N),A(N),L(N),R(N);
     for(int i=0;i<N;++i) cin >> P[i], P[i]--;
-    UnionFindTree uf(N);
-    {
-        vector<int> tmp(N,0);
-        for(int i=0;i<N;++i) {
-            tmp[P[i]]++;
-            if(P[i] && tmp[P[i]-1]) uf.merge(P[i],P[i]-1);
-        }
-    }
-    vector<int64> L(N),R(N),A(N);
     for(int i=0;i<N;++i) {
-        int a,b,c; cin >> a >> b >> c;
-        chmin(b,a);
-        chmin(c,a);
-        L[i] = b;
-        R[i] = c;
+        int64 a,l,r; cin >> a >> l >> r;
         A[i] = a;
+        L[i] = min(a,l);
+        R[i] = min(a,r);
     }
-    DisjointSparseTable<NodeSum<int64>> dstL(L),dstR(R),dstA(A);
-    int64 ans = HIGHINF;
-    using tp = tuple<int,int64,int64,int64>;
-    vector<tp> vtp;
+    DisjointSparseTable<NodeSum<int64>> dstA(A),dstL(L),dstR(R);
+    SegmentTree<MonoidRangeMinPointUpdate<int64>> dp(N);
+    int64 ans = LOWINF;
     for(int i=0;i<N;++i) {
-        int l = uf.min(i);
-        int r = uf.max(i);
-        vtp.emplace_back(l,dstL.fold(l,r+1),dstA.fold(l,r+1),dstR.fold(l,r+1));
+        int p = P[i];
+        int64 cnt = LOWINF;
+        chmin(cnt,dstL.fold(0,p));
+        chmin(cnt,dstA.fold(0,p) + dp.fold(0,p));
+        chmin(ans,cnt + dstR.fold(p+1,N));
+        dp.operate(p,cnt - dstA.fold(0,p+1));
     }
-    vtp.erase(unique(vtp.begin(),vtp.end()),vtp.end());
-    int M = vtp.size();
-    auto dp = multivector(M+1,6,LOWINF);
-    dp[M][0] = 0;
-    for(int i=M-1;0<=i;--i) {
-        int64 l = get<1>(vtp[i]);
-        int64 a = get<2>(vtp[i]);
-        int64 r = get<3>(vtp[i]);
-        chmin(dp[i][1],dp[i+1][0]+r);
-        chmin(dp[i][1],dp[i+1][1]+r);
-        chmin(dp[i][2],dp[i+1][0]);
-        chmin(dp[i][2],dp[i+1][1]);
-        chmin(dp[i][3],dp[i+1][2]+a);
-        chmin(dp[i][3],dp[i+1][3]+a);
-        chmin(dp[i][4],dp[i+1][0]);
-        chmin(dp[i][4],dp[i+1][3]);
-        chmin(dp[i][5],dp[i+1][2]+l);
-        chmin(dp[i][5],dp[i+1][4]+l);
-        chmin(dp[i][5],dp[i+1][5]+l);
-        print(get<0>(vtp[i]),l,a,r,dp[i]);
-    }
-    cout << *min_element(ALL(dp[0])) << endl;
+    cout << ans << endl;
     return 0; 
 } 
