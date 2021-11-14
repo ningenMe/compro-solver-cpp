@@ -1,4 +1,3 @@
-#pragma GCC target("avx2")
 #pragma GCC optimize("O3")
 #include <bits/stdc++.h>
 using namespace std;

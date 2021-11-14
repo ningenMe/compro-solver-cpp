@@ -26,7 +26,7 @@ int main(void){
         long long a,b; cin >> a >> b;
         points[i] = {a,b};
     }
-    auto idx = Argument::sort_by_flaction<long long>(points);
+    auto idx = Argument::sort_by_atan2l<long long>(points);
     for(int i = 0; i < N; ++i) {
         cout << points[idx[i]].first << " " << points[idx[i]].second << endl; 
     }

@@ -35,6 +35,6 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 int main() {
     long double p;
     ll n; cin >> p >> n;
-    printf("%.18Lf",0.5*(1-powf64x(1-2*p,n)));
+    printf("%.18Lf",0.5*(1-powl(1-2*p,n)));
     return 0;
 }

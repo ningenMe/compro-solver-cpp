@@ -198,7 +198,7 @@ int main() {
             ranges.emplace_back(l,r);
         }
     }
-    auto mex = range_mex(A,ranges,1);
+    auto mex = static_range_mex_query(A,ranges,1);
 
     set<int> st;
     for(int i=1;i<=N;++i) {
