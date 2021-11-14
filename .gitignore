@@ -2,3 +2,5 @@
 *.exe
 *.solve
 tempCodeRunnerFile.cpp
+cmake-build-debug
+.idea
