@@ -3,12 +3,6 @@
 
 競技プログラミングのsubmittion
 
-- javadocを書いてsubmittionをcommitすると、
-https://compro-category.ningenme.net/#/ に反映されるようになっている。
-
-- 連携に関しては下記apiを使用。
-https://github.com/ningenMe/ningenme-net-api
-
 - javadocの書き方は下記参考
 ```cpp
 /**
