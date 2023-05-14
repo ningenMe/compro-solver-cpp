@@ -34,40 +34,15 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
- * @title FastIO
- * @docs md/util/FastIO.md
+ * @title Eratosthenes - エラトステネスの篩
+ * @docs md/math/Eratosthenes.md
  */
-class FastIO{
-private:
-    inline static constexpr int ch_0='0';
-    inline static constexpr int ch_9='9';
-    inline static constexpr int ch_n='-';
-    template<typename T> inline static void read_integer(T &x) {
-        int neg=0; char ch; x=0;
-        ch=getchar();
-        if(ch==ch_n) neg=1,ch=getchar();
-        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
-        if(neg) x*=-1;
-    }
-    inline static char ar[40];
-    inline static char *ch_ar;
-    template<typename T> inline static void write_integer(T x) {
-        ch_ar=ar;
-        if(x< 0) putchar(ch_n), x=-x;
-        if(x==0) putchar(ch_0);
-        for(;x;x/=10) *ch_ar++=(ch_0+x%10);
-        while(ch_ar--!=ar) putchar(*ch_ar);
-    }
-public:
-    inline static void read(int &x) {read_integer<int>(x);}
-    inline static void read(long long &x) {read_integer<long long>(x);}
-    inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
-    inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
-    inline static void write(char x) {putchar(x);}
-};
-#define read(arg) FastIO::read(arg)
-#define write(arg) FastIO::write(arg)
-
+inline static vector<int> Eratosthenes(int N) {
+    vector<int> res(N + 1, 1);
+    res[0] = res[1%(N+1)] = 0;
+    for (int i = 1; i*i <= N; i++) if (res[i]) for (int j = 2 * i; j <= N; j += i) res[j] = 0;
+    return res;
+}
 
 /**
  * @url 
@@ -75,18 +50,31 @@ public:
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    unordered_map<int64,int64> mp;
-    int Q; read(Q);
-    while (Q--){
-        int q; read(q);
-        int64 k; read(k);
-        if(q) {
-            cout << mp[k] << "\n";
-        }
-        else{
-            int64 v; read(v);
-            mp[k] = v;
+    int MM = 1000000;
+    auto E = Eratosthenes(MM);
+    vector<int64> p;
+    for(int i=0;i<=MM;++i) if(E[i]) p.push_back(i);
+
+    int64 N; cin >> N;
+    int64 ans = 0;
+
+    int M = p.size();
+    for(int ai=0;ai<M;++ai) {
+        int64 a = p[ai];
+        int64 aa = a*a;
+        if(aa > N / (a*a*a)) break;
+        for(int bi=ai+1;bi<M;++bi) {
+            int64 b = p[bi];
+            if(aa*b > N / (b*b)) break;
+            for(int ci=bi+1;ci <M;++ci) {
+                int64 c = p[ci];
+                int64 cc = c*c;
+                if(aa*b*cc <= N) ans++;
+                else break;
+            }
         }
     }
+    cout << ans << endl;
+
     return 0;
 }

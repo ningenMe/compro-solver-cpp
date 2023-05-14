@@ -33,41 +33,49 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
-/*
- * @title FastIO
- * @docs md/util/FastIO.md
- */
-class FastIO{
-private:
-    inline static constexpr int ch_0='0';
-    inline static constexpr int ch_9='9';
-    inline static constexpr int ch_n='-';
-    template<typename T> inline static void read_integer(T &x) {
-        int neg=0; char ch; x=0;
-        ch=getchar();
-        if(ch==ch_n) neg=1,ch=getchar();
-        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
-        if(neg) x*=-1;
-    }
-    inline static char ar[40];
-    inline static char *ch_ar;
-    template<typename T> inline static void write_integer(T x) {
-        ch_ar=ar;
-        if(x< 0) putchar(ch_n), x=-x;
-        if(x==0) putchar(ch_0);
-        for(;x;x/=10) *ch_ar++=(ch_0+x%10);
-        while(ch_ar--!=ar) putchar(*ch_ar);
-    }
-public:
-    inline static void read(int &x) {read_integer<int>(x);}
-    inline static void read(long long &x) {read_integer<long long>(x);}
-    inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
-    inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
-    inline static void write(char x) {putchar(x);}
-};
-#define read(arg) FastIO::read(arg)
-#define write(arg) FastIO::write(arg)
+int H,W,T;
+vector<vector<int64>> vv(6, vector<int64>(6,0));
+int64 ans = HIGHINF;
 
+void dfs(vector<tuple<int,int,int,int>> vt) {
+    if(vt.size() == T+1) {
+        int64 maxi = 0, mini = HIGHINF;
+        for(auto [y1,x1,y2,x2]:vt) {
+            int64 sum = 0;
+            for(int i=y1;i<=y2;++i) {
+                for(int j=x1;j<=x2;++j) {
+                    sum += vv[i][j];
+                }
+                chmax(maxi,sum);
+                chmin(mini,sum);
+            }
+        }
+        chmin(ans,maxi-mini);
+        return;
+    }
+    for(int n=0;n<vt.size();++n) {
+        auto [y1,x1,y2,x2] = vt[n];
+        vector<tuple<int,int,int,int>> vt2;
+        for(int k=0;k<vt.size();++k) {
+                if(n==k) continue;
+                vt2.push_back(vt[k]);
+        }
+        for(int i=y1;i+1<=y2;++i) {            
+            vt2.emplace_back(y1,x1,i,x2);
+            vt2.emplace_back(i+1,x1,y2,x2);
+            dfs(vt2);
+            vt2.pop_back();
+            vt2.pop_back();
+        }
+        for(int j=x1;j+1<=x2;++j) {            
+            vt2.emplace_back(y1,x1,y2,j);
+            vt2.emplace_back(y1,j+1,y2,x2);
+            dfs(vt2);
+            vt2.pop_back();
+            vt2.pop_back();
+        }
+    }
+}
 
 /**
  * @url 
@@ -75,18 +83,15 @@ public:
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    unordered_map<int64,int64> mp;
-    int Q; read(Q);
-    while (Q--){
-        int q; read(q);
-        int64 k; read(k);
-        if(q) {
-            cout << mp[k] << "\n";
-        }
-        else{
-            int64 v; read(v);
-            mp[k] = v;
+    cin >> H >> W >> T;
+    for(int i=0;i<H;++i) {
+        for(int j=0;j<W;++j) {
+            cin >> vv[i][j];
         }
     }
+    vector<tuple<int,int,int,int>> vt;
+    vt.emplace_back(0,0,H-1,W-1);
+    dfs(vt);
+    cout << ans << endl;
     return 0;
 }

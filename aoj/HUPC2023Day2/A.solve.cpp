@@ -34,40 +34,50 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
- * @title FastIO
- * @docs md/util/FastIO.md
+ * @title Gcd - 高速GCD
+ * @docs md/math/Gcd.md
  */
-class FastIO{
-private:
-    inline static constexpr int ch_0='0';
-    inline static constexpr int ch_9='9';
-    inline static constexpr int ch_n='-';
-    template<typename T> inline static void read_integer(T &x) {
-        int neg=0; char ch; x=0;
-        ch=getchar();
-        if(ch==ch_n) neg=1,ch=getchar();
-        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
-        if(neg) x*=-1;
-    }
-    inline static char ar[40];
-    inline static char *ch_ar;
-    template<typename T> inline static void write_integer(T x) {
-        ch_ar=ar;
-        if(x< 0) putchar(ch_n), x=-x;
-        if(x==0) putchar(ch_0);
-        for(;x;x/=10) *ch_ar++=(ch_0+x%10);
-        while(ch_ar--!=ar) putchar(*ch_ar);
-    }
+class Gcd{
 public:
-    inline static void read(int &x) {read_integer<int>(x);}
-    inline static void read(long long &x) {read_integer<long long>(x);}
-    inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
-    inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
-    inline static void write(char x) {putchar(x);}
+    inline static long long impl(long long n, long long m) {
+        static constexpr long long K = 5;
+        long long t,s;
+        for(int i = 0; t = n - m, s = n - m * K, i < 80; ++i) {
+            if(t<m){
+                if(!t) return m;
+                n = m, m = t;
+            }
+            else{
+                if(!m) return t;
+                n=t;
+                if(t >= m * K) n = s;
+            }
+        }
+        return impl(m, n % m);
+    }
+    inline static long long pre(long long n, long long m) {
+        long long t;
+        for(int i = 0; t = n - m, i < 4; ++i) {
+            (t < m ? n=m,m=t : n=t);
+            if(!m) return n;
+        }
+        return impl(n, m);
+    }
+    inline static long long gcd(long long n, long long m) {
+        return (n>m ? pre(n,m) : pre(m,n));
+    }
+    inline static constexpr long long pureGcd(long long a, long long b) {
+        return (b ? pureGcd(b, a % b):a);
+    }
+    inline static constexpr long long lcm(long long a, long long b) {
+        return (a*b ? (a / gcd(a, b)*b): 0);
+    }
+    inline static constexpr long long extGcd(long long a, long long b, long long &x, long long &y) {
+        if (b == 0) return x = 1, y = 0, a;
+        long long d = extGcd(b, a%b, y, x);
+        return y -= a / b * x, d;
+    }
 };
-#define read(arg) FastIO::read(arg)
-#define write(arg) FastIO::write(arg)
-
 
 /**
  * @url 
@@ -75,18 +85,14 @@ public:
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    unordered_map<int64,int64> mp;
-    int Q; read(Q);
-    while (Q--){
-        int q; read(q);
-        int64 k; read(k);
-        if(q) {
-            cout << mp[k] << "\n";
-        }
-        else{
-            int64 v; read(v);
-            mp[k] = v;
-        }
+    int N; cin >> N;
+    int64 lcm = 1;
+    for(int i=0;i<N;++i) {
+        int64 t; cin >> t;
+        lcm = Gcd::lcm(lcm,t);
+        string c; cin >> c;
     }
+    cout << lcm << endl;
+
     return 0;
 }

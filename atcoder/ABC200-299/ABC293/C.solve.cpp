@@ -33,60 +33,44 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
-/*
- * @title FastIO
- * @docs md/util/FastIO.md
- */
-class FastIO{
-private:
-    inline static constexpr int ch_0='0';
-    inline static constexpr int ch_9='9';
-    inline static constexpr int ch_n='-';
-    template<typename T> inline static void read_integer(T &x) {
-        int neg=0; char ch; x=0;
-        ch=getchar();
-        if(ch==ch_n) neg=1,ch=getchar();
-        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
-        if(neg) x*=-1;
-    }
-    inline static char ar[40];
-    inline static char *ch_ar;
-    template<typename T> inline static void write_integer(T x) {
-        ch_ar=ar;
-        if(x< 0) putchar(ch_n), x=-x;
-        if(x==0) putchar(ch_0);
-        for(;x;x/=10) *ch_ar++=(ch_0+x%10);
-        while(ch_ar--!=ar) putchar(*ch_ar);
-    }
-public:
-    inline static void read(int &x) {read_integer<int>(x);}
-    inline static void read(long long &x) {read_integer<long long>(x);}
-    inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
-    inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
-    inline static void write(char x) {putchar(x);}
-};
-#define read(arg) FastIO::read(arg)
-#define write(arg) FastIO::write(arg)
-
-
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    unordered_map<int64,int64> mp;
-    int Q; read(Q);
-    while (Q--){
-        int q; read(q);
-        int64 k; read(k);
-        if(q) {
-            cout << mp[k] << "\n";
-        }
-        else{
-            int64 v; read(v);
-            mp[k] = v;
+    int H,W; cin >> H >> W;
+    auto vv = multivector(H,W,0);
+    for(int i=0;i<H;++i) {
+        for(int j=0;j<W;++j) {
+            cin >> vv[i][j];
         }
     }
+    queue<pair<pair<int,int>,set<int>>> q;
+    set<int> ini;
+    ini.insert(vv[0][0]);
+    q.push({{0,0},ini});
+    int ans = 0;
+    
+    while(q.size()) {
+        auto p1 = q.front(); q.pop();
+        auto [y,x]=p1.first;
+        auto st=p1.second;
+        if(y==H-1&&x==W-1){
+            ans++;
+            continue;
+        }
+        if(y+1<H && !st.count(vv[y+1][x])) {
+            auto st2 = st;
+            st2.insert(vv[y+1][x]);
+            q.push({{y+1,x},st2});
+        }
+        if(x+1<W && !st.count(vv[y][x+1])) {
+            auto st2 = st;
+            st2.insert(vv[y][x+1]);
+            q.push({{y,x+1},st2});
+        }
+    }
+    cout << ans << endl;
     return 0;
 }

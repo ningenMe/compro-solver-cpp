@@ -1,6 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <numeric>
+#include <bits/stdc++.h>
 using namespace std;
 
 /*
@@ -59,55 +57,63 @@ public:
 #define read(arg) FastIO::read(arg)
 #define write(arg) FastIO::write(arg)
 
-/*
- * @title SparseTable
- * @docs md/data-structure/range-query/SparseTable.md
- */
-template<class Operator> class SparseTable{
+template<class T> class DoubleEndedPriorityQuere {
+	priority_queue<T> max_pq,poped_max_pq;
+	priority_queue<T, vector<T>, greater<T> > min_pq, poped_min_pq;
 public:
-    using TypeNode = typename Operator::TypeNode;
-    vector<TypeNode> node;
-    vector<size_t> idx;
-    size_t depth;
-    size_t length;
-
-    SparseTable(const vector<TypeNode>& vec) {
-        for(depth = 0;(1<<depth)<=vec.size();++depth);
-        length = (1<<depth);
-        node.resize(depth*length);
-        for(int i = 0; i < vec.size(); ++i) node[i] = vec[i];
-        for(int i = 1; i < depth; ++i) for(int j = 0; j + (1<<i) < (1<<depth); ++j) node[i*length+j] = Operator::func_fold(node[(i-1)*length+j],node[(i-1)*length+j + (1 << (i-1))]);
-        idx.resize(vec.size()+1);
-        for(int i = 2; i < vec.size()+1; ++i) idx[i] = idx[i>>1] + 1;
+	DoubleEndedPriorityQuere() {
     }
-
-    //[l,r)
-    TypeNode fold(const int l,const int r) {
-        size_t bit = idx[r-l];
-        return Operator::func_fold(node[bit*length+l],node[bit*length+r - (1<<bit)]);
-    }
+	inline void push(T &v) {
+		max_pq.push(v);
+		min_pq.push(v);
+	}
+	inline T front() {
+        while(poped_min_pq.size() && min_pq.top()==poped_min_pq.top()) min_pq.pop(),poped_min_pq.pop();
+		return min_pq.top();
+	}
+	inline T back() {
+        while(poped_max_pq.size() && max_pq.top()==poped_max_pq.top()) max_pq.pop(),poped_max_pq.pop();
+		return max_pq.top();
+	}
+	inline void pop_front() {
+        while(poped_min_pq.size() && min_pq.top()==poped_min_pq.top()) min_pq.pop(),poped_min_pq.pop();
+		poped_max_pq.push(min_pq.top());
+		min_pq.pop();
+	}
+	inline void pop_back() {
+        while(poped_max_pq.size() && max_pq.top()==poped_max_pq.top()) max_pq.pop(),poped_max_pq.pop();
+		poped_min_pq.push(max_pq.top());
+		max_pq.pop();
+	}
+	inline size_t size() { return max_pq.size(); }
 };
 
-template<class T> struct NodeMin {
-    using TypeNode = T;
-    inline static constexpr TypeNode unitNode = 1LL<<31;
-    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return min(l,r);}
-};
-
-
-int main(){
-	cin.tie(0);ios::sync_with_stdio(false);
-    int N,Q; 
-	read(N); read(Q);
-    vector<long long> A(N);
-    for(int i = 0; i < N; ++i) {
-        read(A[i]);
+/**
+ * @url 
+ * @est
+ */ 
+int main() {
+    cin.tie(0);ios::sync_with_stdio(false);
+    int N,Q; read(N);read(Q);
+    DoubleEndedPriorityQuere<long long> pq;
+    while(N--) {
+        long long s; read(s); pq.push(s);
     }
-    SparseTable<NodeMin<long long>> st(A);
-    while(Q--){
-        int l,r; 
-		read(l);read(r);
-        cout << st.fold(l,r) << "\n";
+    while(Q--) {
+        int q; read(q); 
+        if(q==0) {
+            long long x; read(x);
+            pq.push(x);
+        }
+        if(q==1) {
+            long long x = pq.front(); pq.pop_front();
+            cout << x << "\n";
+        }
+        if(q==2) {
+            long long x = pq.back(); pq.pop_back();
+            cout << x << "\n";
+        }
     }
+
+    return 0;
 }
-

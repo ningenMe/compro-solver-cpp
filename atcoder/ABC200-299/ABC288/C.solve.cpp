@@ -34,40 +34,49 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
- * @title FastIO
- * @docs md/util/FastIO.md
+ * @title UnionFindTree - Union Find 木
+ * @docs md/graph/UnionFindTree.md
  */
-class FastIO{
-private:
-    inline static constexpr int ch_0='0';
-    inline static constexpr int ch_9='9';
-    inline static constexpr int ch_n='-';
-    template<typename T> inline static void read_integer(T &x) {
-        int neg=0; char ch; x=0;
-        ch=getchar();
-        if(ch==ch_n) neg=1,ch=getchar();
-        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
-        if(neg) x*=-1;
-    }
-    inline static char ar[40];
-    inline static char *ch_ar;
-    template<typename T> inline static void write_integer(T x) {
-        ch_ar=ar;
-        if(x< 0) putchar(ch_n), x=-x;
-        if(x==0) putchar(ch_0);
-        for(;x;x/=10) *ch_ar++=(ch_0+x%10);
-        while(ch_ar--!=ar) putchar(*ch_ar);
+class UnionFindTree {
+    vector<int> parent,maxi,mini;
+    inline int root(int n) {
+        return (parent[n]<0?n:parent[n] = root(parent[n]));
     }
 public:
-    inline static void read(int &x) {read_integer<int>(x);}
-    inline static void read(long long &x) {read_integer<long long>(x);}
-    inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
-    inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
-    inline static void write(char x) {putchar(x);}
+    UnionFindTree(int N = 1) : parent(N,-1),maxi(N),mini(N){
+        iota(maxi.begin(),maxi.end(),0);
+        iota(mini.begin(),mini.end(),0);
+    }
+    inline bool connected(int n, int m) {
+        return root(n) == root(m);
+    }
+    inline void merge(int n, int m) {
+        n = root(n);
+        m = root(m);
+        if (n == m) return;
+        if(parent[n]>parent[m]) swap(n, m);
+        parent[n] += parent[m];
+        parent[m] = n;
+        maxi[n] = std::max(maxi[n],maxi[m]);
+        mini[n] = std::min(mini[n],mini[m]);
+    }
+    inline int min(int n) {
+        return mini[root(n)];
+    }
+    inline int max(int n) {
+        return maxi[root(n)];
+    }
+    inline int size(int n){
+        return (-parent[root(n)]);
+    }
+    inline int operator[](int n) {
+        return root(n);
+    }
+    inline void print() {
+        for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
+        cout << endl;
+    }
 };
-#define read(arg) FastIO::read(arg)
-#define write(arg) FastIO::write(arg)
-
 
 /**
  * @url 
@@ -75,18 +84,18 @@ public:
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    unordered_map<int64,int64> mp;
-    int Q; read(Q);
-    while (Q--){
-        int q; read(q);
-        int64 k; read(k);
-        if(q) {
-            cout << mp[k] << "\n";
+    int N,M; cin >> N >> M;
+    UnionFindTree uf(N);
+    int ans = 0;
+    for(int i=0;i<M;++i) {
+        int a,b; cin >> a >> b;
+        a--,b--;
+
+        if(uf.connected(a,b)) {
+            ans++;
         }
-        else{
-            int64 v; read(v);
-            mp[k] = v;
-        }
+        else uf.merge(a,b);
     }
+    cout << ans << endl;
     return 0;
 }

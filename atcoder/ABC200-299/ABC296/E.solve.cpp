@@ -34,40 +34,80 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
- * @title FastIO
- * @docs md/util/FastIO.md
+ * @title StronglyConnectedComponents - 強連結成分分解
+ * @docs md/graph/StronglyConnectedComponents.md
  */
-class FastIO{
-private:
-    inline static constexpr int ch_0='0';
-    inline static constexpr int ch_9='9';
-    inline static constexpr int ch_n='-';
-    template<typename T> inline static void read_integer(T &x) {
-        int neg=0; char ch; x=0;
-        ch=getchar();
-        if(ch==ch_n) neg=1,ch=getchar();
-        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
-        if(neg) x*=-1;
-    }
-    inline static char ar[40];
-    inline static char *ch_ar;
-    template<typename T> inline static void write_integer(T x) {
-        ch_ar=ar;
-        if(x< 0) putchar(ch_n), x=-x;
-        if(x==0) putchar(ch_0);
-        for(;x;x/=10) *ch_ar++=(ch_0+x%10);
-        while(ch_ar--!=ar) putchar(*ch_ar);
+class StronglyConnectedComponents{
+    int num,is_2sat,half,max_id,cnt;
+    vector<vector<int>> edge;
+    vector<int> label,order,low;
+    stack<size_t> st;
+    inline int rev(int i) { return i < half ? i + half : i - half; }
+    inline void dfs(int& from) {
+        low[from]=order[from]=cnt++;
+        st.push(from);
+        for(int& to:edge[from]) {
+            if(order[to]==-1) {
+                dfs(to);
+                low[from]=min(low[from],low[to]);
+            }
+            else {
+                low[from]=min(low[from],order[to]);
+            }
+        }
+        if (low[from] == order[from]) {
+            while(st.size()) {
+                int u = st.top();st.pop();
+                order[u] = num;
+                label[u] = max_id;
+                if (u == from) break;
+            }
+            max_id++;
+        }
     }
 public:
-    inline static void read(int &x) {read_integer<int>(x);}
-    inline static void read(long long &x) {read_integer<long long>(x);}
-    inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
-    inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
-    inline static void write(char x) {putchar(x);}
+    StronglyConnectedComponents(const int n, bool is_2sat=0):num(n),max_id(0),cnt(0),is_2sat(is_2sat){
+        if(is_2sat) num<<=1;
+        edge.resize(num);
+        label.resize(num);
+        order.resize(num,-1);
+        low.resize(num);
+        half=(num>>1);
+    }
+    inline int operator[](int idx) {
+        return label[idx];
+    }
+    inline void make_edge(const int from,const int to) {
+        edge[from].push_back(to);
+    }
+    //xがflg_xならばyがflg_y
+    inline void make_condition(int x, bool flg_x, int y, bool flg_y) {
+        if (!flg_x) x = rev(x);
+        if (!flg_y) y = rev(y);
+        make_edge(x, y);
+        make_edge(rev(y), rev(x));
+    }
+    //is_2sat=1のときに、2satを満たすかを返却する
+    inline bool solve(void) {
+        for (int i = 0; i < num; i++) if (order[i] == -1) dfs(i);
+        for (int& id:label) id = max_id-1-id;
+        if(!is_2sat) return true;
+        for (int i = 0; i < num; ++i) if (label[i] == label[rev(i)]) return false;
+        return true;
+    }
+    vector<vector<int>> topological_sort(void) {
+        vector<vector<int>> ret(max_id);
+        for(int i=0;i<num;++i) ret[label[i]].push_back(i);
+        return ret;
+    }
+    int is_true(int i) {
+        return label[i] > label[rev(i)];
+    }
+    void print(void) {
+        for(auto id:label) cout << id << " ";
+        cout << endl;
+    }
 };
-#define read(arg) FastIO::read(arg)
-#define write(arg) FastIO::write(arg)
-
 
 /**
  * @url 
@@ -75,18 +115,19 @@ public:
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    unordered_map<int64,int64> mp;
-    int Q; read(Q);
-    while (Q--){
-        int q; read(q);
-        int64 k; read(k);
-        if(q) {
-            cout << mp[k] << "\n";
-        }
-        else{
-            int64 v; read(v);
-            mp[k] = v;
-        }
+    int N; cin >> N;
+    vector<int> A(N); 
+    for(int i=0;i<N;++i) cin >> A[i], A[i]--;
+    StronglyConnectedComponents scc(N);
+    for(int i=0;i<N;++i) scc.make_edge(i,A[i]);
+    scc.solve();
+    auto ts = scc.topological_sort();
+    int ans = 0;
+    for(int i=0;i<N;++i) if(i==A[i]) ans++;
+    for(auto v:ts) {
+        if(v.size()==1) continue;
+        ans += v.size();
     }
+    cout << ans << endl;
     return 0;
 }
