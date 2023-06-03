@@ -33,11 +33,103 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+void solve() {
+    int N; cin >> N;
+    vector<vector<int>> edge(N);
+    vector<int> deg(N,0);
+    string col(N,'P');
+    for(int i=0;i+1<N;++i) {
+        int u,v; cin >> u >> v;
+        u--,v--;
+        edge[u].push_back(v);
+        edge[v].push_back(u);
+        deg[u]++; deg[v]++;
+    }
+    string S; cin >> S;
+    queue<int> q;
+    set<int> st;
+    for(int i=0;i<N;++i) if(deg[i]==1) {
+        q.push(i);
+        st.insert(i);
+    }
+
+    string ans = "";
+    while(q.size()) {
+        int from=q.front(); q.pop();
+
+        int P=0,C=0,B=0,W=0;
+        int M=0;
+        for(int to:edge[from]) {
+            if(col[to]=='P') P++;
+            if(col[to]=='C') C++;
+            if(col[to]=='B') B++;
+            if(col[to]=='W') W++;
+            
+            deg[to]--;
+            if(deg[to]<=1 && !st.count(to)) {
+                st.insert(to);
+                q.push(to);
+            }
+            M++;
+        }
+        if(S[from]=='B') {
+            //まずCをBにする
+            for(int to:edge[from]) {
+                if((M+1)/2>B && col[to]=='C') {
+                    C--; B++;
+                    col[to]='B';
+                }
+            }
+            for(int to:edge[from]) {
+                if((M+1)/2>B && col[to]=='P') {
+                    P--; B++;
+                    col[to]='B';
+                }
+            }
+            if((M+1)/2>B) {
+                ans = "-1";
+                break;
+            }
+        }
+        if(S[from]=='W') {
+            //まずCをWにする
+            for(int to:edge[from]) {
+                if((M+1)/2>W && col[to]=='C') {
+                    C--; W++;
+                    col[to]='W';
+                }
+            }
+            for(int to:edge[from]) {
+                if((M+1)/2>W && col[to]=='P') {
+                    P--; W++;
+                    col[to]='W';
+                }
+            }
+            if((M+1)/2>W) {
+                ans = "-1";
+                break;
+            }
+        }
+        if(col[from]=='P') col[from]='C';
+    }
+    if(ans=="-1") {
+        cout << ans << endl;
+        return;
+    }
+    ans = col;
+    for(int i=0;i<N;++i) if(ans[i]=='C' || ans[i]=='P') ans[i]='W';
+    cout << ans << endl;
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int T; cin >> T;
+    while(T--) {
+        solve();
+    }
     return 0;
 }

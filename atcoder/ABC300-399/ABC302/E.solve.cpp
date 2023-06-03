@@ -39,5 +39,38 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N,Q; cin >> N >> Q;
+    vector<set<int>> vv(N);
+
+    int sum = N;
+    while(Q--) {
+        int q; cin >> q;
+        if(q==1) {
+            int u,v; cin >> u >> v;
+            u--,v--;
+            if(!vv[u].size()) {
+                sum--;
+            }
+            vv[u].insert(v);
+
+            if(!vv[v].size()) {
+                sum--;
+            }
+            vv[v].insert(u);
+        }
+        if(q==2) {
+            int u; cin >> u;
+            u--;
+            if(vv[u].size()) sum++;
+            for(int v:vv[u]) {
+                vv[v].erase(u);
+                if(!vv[v].size()) {
+                    sum++;
+                }
+            }
+            vv[u] = set<int>();
+        }
+        cout << sum << "\n";
+    }
     return 0;
 }

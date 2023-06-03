@@ -39,5 +39,8 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int64 A,B; cin >> A >> B;
+    cout << (A%B==0?A/B:A/B + 1) << endl;
+
     return 0;
 }

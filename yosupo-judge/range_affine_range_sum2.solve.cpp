@@ -1,7 +1,10 @@
-#include <iostream>
 #include <vector>
-#include <numeric>
+#include <iostream>
+#include <cassert>
+#include <queue>
+
 using namespace std;
+template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 
 /*
  * @title FastIO
@@ -59,7 +62,56 @@ public:
 #define read(arg) FastIO::read(arg)
 #define write(arg) FastIO::write(arg)
 
-template<class Monoid> class SplayTreeSequence {
+/*
+ * @title ModInt
+ * @docs md/util/ModInt.md
+ */
+template<long long mod> class ModInt {
+public:
+    long long x;
+    constexpr ModInt():x(0) {}
+    constexpr ModInt(long long y) : x(y>=0?(y%mod): (mod - (-y)%mod)%mod) {}
+    constexpr ModInt &operator+=(const ModInt &p) {if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator+=(const long long y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator+=(const int y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const ModInt &p) {if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const long long y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const int y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator*=(const ModInt &p) {x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator*=(const long long y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator*=(const int y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator^=(const ModInt &p) {x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator^=(const long long y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator^=(const int y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator/=(const ModInt &p) {*this *= p.inv();return *this;}
+    constexpr ModInt &operator/=(const long long y) {ModInt p(y);*this *= p.inv();return *this;}
+    constexpr ModInt &operator/=(const int y) {ModInt p(y);*this *= p.inv();return *this;}
+    constexpr ModInt operator=(const int y) {ModInt p(y);*this = p;return *this;}
+    constexpr ModInt operator=(const long long y) {ModInt p(y);*this = p;return *this;}
+    constexpr ModInt operator-() const {return ModInt(-x); }
+    constexpr ModInt operator++() {x++;if(x>=mod) x-=mod;return *this;}
+    constexpr ModInt operator--() {x--;if(x<0) x+=mod;return *this;}
+    constexpr ModInt operator+(const ModInt &p) const { return ModInt(*this) += p; }
+    constexpr ModInt operator-(const ModInt &p) const { return ModInt(*this) -= p; }
+    constexpr ModInt operator*(const ModInt &p) const { return ModInt(*this) *= p; }
+    constexpr ModInt operator/(const ModInt &p) const { return ModInt(*this) /= p; }
+    constexpr ModInt operator^(const ModInt &p) const { return ModInt(*this) ^= p; }
+    constexpr bool operator==(const ModInt &p) const { return x == p.x; }
+    constexpr bool operator!=(const ModInt &p) const { return x != p.x; }
+    // ModInt inv() const {int a=x,b=mod,u=1,v=0,t;while(b > 0) {t = a / b;swap(a -= t * b, b);swap(u -= t * v, v);} return ModInt(u);}
+    constexpr ModInt inv() const {int a=x,b=mod,u=1,v=0,t=0,tmp=0;while(b > 0) {t = a / b;a-=t*b;tmp=a;a=b;b=tmp;u-=t*v;tmp=u;u=v;v=tmp;} return ModInt(u);}
+    constexpr ModInt pow(long long n) const {ModInt ret(1), mul(x);for(;n > 0;mul *= mul,n >>= 1) if(n & 1) ret *= mul;return ret;}
+    friend ostream &operator<<(ostream &os, const ModInt &p) {return os << p.x;}
+    friend istream &operator>>(istream &is, ModInt &a) {long long t;is >> t;a = ModInt<mod>(t);return (is);}
+};
+constexpr long long MOD_998244353 = 998244353;
+constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
+
+/*
+ * @title LazySplayTreeSequence - 遅延評価SplayTree列
+ * @docs md/binary-search-tree/LazySplayTreeSequence.md
+ */
+template<class Monoid> class LazySplayTreeSequence {
     using TypeNode = typename Monoid::TypeNode;
     using TypeLazy = typename Monoid::TypeLazy;
     struct Node {
@@ -77,11 +129,12 @@ template<class Monoid> class SplayTreeSequence {
     Node* root;
     int size(Node *node) {return node==nullptr ? 0 : node->size;}
     TypeNode range_value(Node *node) {return node==nullptr ? Monoid::unit_node : node->range_value;}
-    Node* update(Node *node) {
-        if(node==nullptr) return node;
+    void update(Node *node) {
+        if(node==nullptr) return;
+		if(node->left != nullptr) propagate(node->left);
+		if(node->right != nullptr) propagate(node->right);
         node->size = size(node->left) + size(node->right) + 1;
         node->range_value = Monoid::func_fold(Monoid::func_fold(range_value(node->left),node->value),range_value(node->right));
-        return node;
     }
     void propagate(Node *node) {
         if(node==nullptr || (node->range_lazy == Monoid::unit_lazy && node->rev == 0)) return;
@@ -163,13 +216,13 @@ template<class Monoid> class SplayTreeSequence {
         if(l==0) return get_impl(r)->left; //r-1?
         if(r==size(root)) return get_impl(l-1)->right;
         Node* target_right = get_impl(r);
-        {
-            Node* target_0_to_right = target_right->left;
-            root = target_0_to_right;
-            target_0_to_right->parent = nullptr;
-        }
-        Node* target_left = get_impl(l-1);
+        Node* target_left = target_right->left;
+        root = target_left;
+
+        target_left->parent = nullptr;
+        target_left = get_impl(l-1);
         root=target_right;
+
         target_right->left=target_left;
         target_left->parent=target_right;
         update(target_right);
@@ -227,11 +280,15 @@ template<class Monoid> class SplayTreeSequence {
         if(l < 0 || size(root) <= l || r <= 0 || r-l <= 0) return;
         Node* node=get_range_impl(l,r);
         node->range_lazy = Monoid::func_lazy(node->range_lazy,lazy);
+		propagate(node);
         splay(node);
     }
     inline TypeNode fold_impl(int l, int r) {
         if (l < 0 || size(root) <= l || r<=0 || r-l <= 0) return Monoid::unit_node;
-        return get_range_impl(l,r)->range_value;
+		Node* node=get_range_impl(l,r);
+		propagate(node);
+		update(node);
+        return range_value(node);
     }
     void reverse_impl(int l, int r) {
         if (l < 0 || size(root) <= l || r<=0 || r-l <= 0) return;
@@ -240,7 +297,7 @@ template<class Monoid> class SplayTreeSequence {
         splay(node);
     }
     void print_impl() {
-        int M=4;
+        int M=5;
         vector<vector<Node*>> vv(M);
         vv[0].push_back(root);
         for(int i=0;i+1<M;++i) {
@@ -254,8 +311,12 @@ template<class Monoid> class SplayTreeSequence {
         for(int i=0;i<M;++i) {
             int MM = vv[i].size();
             for(int j=0;j<MM;++j) {
-                string va = (vv[i][j]==nullptr ? "" : to_string(vv[i][j]->value));
-                cout << va << ", ";
+				if(vv[i][j]==nullptr) {
+					cout << "{:},";
+				}
+				else {
+					cout << "{" << vv[i][j]->value << ":" << vv[i][j]->range_lazy << "}, ";
+				}
             }
             cout << endl;
         }
@@ -274,7 +335,7 @@ template<class Monoid> class SplayTreeSequence {
         }
     }
 public:
-    SplayTreeSequence(): root(nullptr) {}
+    LazySplayTreeSequence(): root(nullptr) {}
     TypeNode get(const size_t k) {return get_impl(k)->value; }
     int size() {return size(root); }
     void insert(const size_t k, const TypeNode value) {insert_impl(k,value);}
@@ -287,35 +348,40 @@ public:
 };
 
 /*
- * @title MonoidRangeFoldMinRangeOperateUpdate - fold:区間和, operate:区間更新
- * @docs md/operator/monoid-lazy/MonoidRangeFoldMinRangeOperateUpdate.md
+ * @title MonoidRangeSumRangeAffine - fold:区間和, operate:区間アフィン変換
+ * @docs md/operator/monoid-lazy/MonoidRangeSumRangeAffine.md
  */
-template<class T, class U> struct MonoidRangeFoldMinRangeOperateUpdate {
+template<class T, class U> struct MonoidRangeFoldSumRangeOperateAffine {
 	using TypeNode = T;
 	using TypeLazy = U;
-	inline static constexpr TypeNode unit_node = 1000'000'001LL;
-	inline static constexpr TypeLazy unit_lazy = 1000'000'001LL;
-	inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return min(l,r);}
-	inline static constexpr TypeLazy func_lazy(TypeLazy old_lazy,TypeLazy new_lazy){return new_lazy;}
-	inline static constexpr TypeNode func_operate(TypeNode node,TypeLazy lazy,int l, int r){return min(node,lazy);}
+	inline static constexpr TypeNode unit_node = 0;
+	inline static constexpr TypeLazy unit_lazy = {1,0};
+	inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+	inline static constexpr TypeLazy func_lazy(TypeLazy old_lazy,TypeLazy new_lazy){return {new_lazy.first*old_lazy.first,new_lazy.first*old_lazy.second+new_lazy.second};}
+	inline static constexpr TypeNode func_operate(TypeNode node,TypeLazy lazy,int l, int r){return {node*lazy.first+lazy.second*(r-l)};}
 	inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var <= nodeVal;}
 };
 
-
+using modint = ModInt<MOD_998244353>;
 
 int main(){
 	cin.tie(0);ios::sync_with_stdio(false);
     int N,Q; 
 	read(N); read(Q);
-    SplayTreeSequence<MonoidRangeFoldMinRangeOperateUpdate<int,int>> st;
+    LazySplayTreeSequence<MonoidRangeFoldSumRangeOperateAffine<modint,pair<modint,modint>>> st;
     for(int i = 0; i < N; ++i) {
         int a; read(a); st.insert(i,a);
     }
-
     while(Q--){
-        int l,r; 
-		read(l);read(r);
-        cout << st.fold(l,r) << "\n";
+        int q,l,r; 
+		read(q); read(l); read(r);
+        if(q) {
+			cout << st.fold(l,r) << "\n";
+		}
+        else {
+			int b,c; read(b); read(c);
+			st.operate(l,r,{modint(b),modint(c)});
+		}
     }
 }
 

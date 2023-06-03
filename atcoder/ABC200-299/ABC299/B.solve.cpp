@@ -39,5 +39,20 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N,T; cin >> N >> T;
+    vector<int> C(N),R(N);
+    for(int i=0;i<N;++i) cin >> C[i];
+    for(int i=0;i<N;++i) cin >> R[i];
+    
+    vector<pair<int,int>> vp;
+    for(int i=0;i<N;++i) if(T==C[i]) vp.push_back({R[i],i});
+    sort(ALL(vp));
+    if(vp.size()) {
+        corner(1,vp.back().second+1);
+    }
+    T=C[0];
+    for(int i=0;i<N;++i) if(T==C[i]) vp.push_back({R[i],i});
+    sort(ALL(vp));
+    corner(vp.size(),vp.back().second+1);
     return 0;
 }

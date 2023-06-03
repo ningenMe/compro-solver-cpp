@@ -1,7 +1,35 @@
-#include <iostream>
-#include <vector>
-#include <numeric>
+#include <bits/stdc++.h>
 using namespace std;
+using int128 = __int128_t;
+using int64 = long long;
+
+#define ALL(obj) (obj).begin(),(obj).end()
+template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,greater<T>>;
+
+constexpr int64 HIGHINF = 1'000'000'000'000'000'000LL;
+constexpr int64 LOWINF = 1'000'000'000'000'000LL; //'
+constexpr long double PI = 3.1415926535897932384626433L;
+
+template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,init);}
+template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}
+template <class T> void corner(bool flg, T hoge) {if (flg) {cout << hoge << endl; exit(0);}}
+template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
+template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
+template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
+template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
+template <class T>ostream &operator<<(ostream &o, const deque<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
+template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
+void print(void) {cout << endl;}
+template <class Head> void print(Head&& head) {cout << head;print();}
+template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
+template <class T> void chmax(T& a, const T b){a=max(a,b);}
+template <class T> void chmin(T& a, const T b){a=min(a,b);}
+vector<string> split(const string &str, const char delemiter) {vector<string> res;stringstream ss(str);string buffer; while( getline(ss, buffer, delemiter) ) res.push_back(buffer); return res;}
+inline constexpr int msb(int x) {return x?31-__builtin_clz(x):-1;}
+inline constexpr int64 ceil_div(const int64 a,const int64 b) {return (a+(b-1))/b;}// return ceil(a/b)
+void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
+void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
+void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
  * @title FastIO
@@ -59,7 +87,11 @@ public:
 #define read(arg) FastIO::read(arg)
 #define write(arg) FastIO::write(arg)
 
-template<class Monoid> class SplayTreeSequence {
+/*
+ * @title LazySplayTreeSequence - 遅延評価SplayTree列
+ * @docs md/binary-search-tree/LazySplayTreeSequence.md
+ */
+template<class Monoid> class LazySplayTreeSequence {
     using TypeNode = typename Monoid::TypeNode;
     using TypeLazy = typename Monoid::TypeLazy;
     struct Node {
@@ -274,7 +306,7 @@ template<class Monoid> class SplayTreeSequence {
         }
     }
 public:
-    SplayTreeSequence(): root(nullptr) {}
+    LazySplayTreeSequence(): root(nullptr) {}
     TypeNode get(const size_t k) {return get_impl(k)->value; }
     int size() {return size(root); }
     void insert(const size_t k, const TypeNode value) {insert_impl(k,value);}
@@ -287,35 +319,49 @@ public:
 };
 
 /*
- * @title MonoidRangeFoldMinRangeOperateUpdate - fold:区間和, operate:区間更新
+ * @title MonoidRangeFoldSumRangeOperateUpdate - fold:区間sum, operate:区間更新
  * @docs md/operator/monoid-lazy/MonoidRangeFoldMinRangeOperateUpdate.md
  */
-template<class T, class U> struct MonoidRangeFoldMinRangeOperateUpdate {
+template<class T, class U> struct MonoidRangeFoldSumRangeOperateUpdate {
 	using TypeNode = T;
 	using TypeLazy = U;
-	inline static constexpr TypeNode unit_node = 1000'000'001LL;
-	inline static constexpr TypeLazy unit_lazy = 1000'000'001LL;
-	inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return min(l,r);}
+	inline static constexpr TypeNode unit_node = 0;
+	inline static constexpr TypeLazy unit_lazy = -1;
+	inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
 	inline static constexpr TypeLazy func_lazy(TypeLazy old_lazy,TypeLazy new_lazy){return new_lazy;}
-	inline static constexpr TypeNode func_operate(TypeNode node,TypeLazy lazy,int l, int r){return min(node,lazy);}
+	inline static constexpr TypeNode func_operate(TypeNode node,TypeLazy lazy,int l, int r){return lazy;}
 	inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var <= nodeVal;}
 };
 
-
-
-int main(){
-	cin.tie(0);ios::sync_with_stdio(false);
-    int N,Q; 
-	read(N); read(Q);
-    SplayTreeSequence<MonoidRangeFoldMinRangeOperateUpdate<int,int>> st;
-    for(int i = 0; i < N; ++i) {
-        int a; read(a); st.insert(i,a);
+/**
+ * @url 
+ * @est
+ */ 
+int main() {
+    cin.tie(0);ios::sync_with_stdio(false);
+    LazySplayTreeSequence<MonoidRangeFoldSumRangeOperateUpdate<int,int>> st;
+    int N = 200010;
+    for(int i=0;i<N;++i) {
+        st.insert(i,0);
     }
-
-    while(Q--){
-        int l,r; 
-		read(l);read(r);
-        cout << st.fold(l,r) << "\n";
+    int Q; read(Q);
+    while(Q--) {
+        int q; read(q);
+        if(q==1) {
+            int x; read(x);
+            st.operate(x,x+1,1);
+        }
+        if(q==2) {
+            int x; read(x);
+            int ok=N,ng=0,md;
+            while(ok-ng>1) {
+                md = (ok+ng)/2;
+                int sum = st.fold(0,md);
+                (x<=sum?ok:ng)=md;
+            }
+            st.operate(ok-1,ok,0);
+            cout << ok-1 << "\n";
+        }
     }
+    return 0;
 }
-

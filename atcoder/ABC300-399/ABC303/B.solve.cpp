@@ -39,5 +39,29 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N,M; cin >> N >> M;
+    auto vv = multivector(M,N,0);
+    for(int i=0;i<M;++i) for(int j=0;j<N;++j) {
+        cin >> vv[i][j];
+        vv[i][j]--;
+    }
+    auto aa = multivector(N,N,1);
+    for(int i=0;i<N;++i) aa[i][i]=0;
+    for(int i=0;i<M;++i) {
+        for(int j=0;j+1<N;++j) {
+            aa[vv[i][j]][vv[i][j+1]]=0;
+            aa[vv[i][j+1]][vv[i][j]]=0;
+        }
+    }
+    int sum = 0;
+    for(int i=0;i<N;++i) {
+        for(int j=0;j<N;++j) {
+            sum+=aa[i][j];
+        }
+    }
+    sum /= 2;
+    cout << sum << endl;
+    
+
     return 0;
 }

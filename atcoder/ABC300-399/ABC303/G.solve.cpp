@@ -33,11 +33,59 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int64 N,A,B,C,D;
+vector<int64> x,acc;
+
+int64 rec(int64 l, int64 r, int flg, vector<vector<vector<int64>>>& dp) {
+    if(l==r) {
+        return flg ? x[l] : -x[l];
+    }
+    if(dp[l][r][flg]  != HIGHINF) return dp[l][r][flg];
+    if(flg) {
+        int64 sum = 0;
+        chmax(sum, rec(l+1,r,!flg,dp) + x[l]);
+        chmax(sum, rec(l,r-1,!flg,dp) + x[r]);
+        if(r-l+1<=B) {
+            chmax(sum, acc[r] - acc[l-1] - A);
+        }
+        else {
+            for(int i=l;i+B<=r;++i) {
+                chmax(sum, (acc[i]-acc[l-1]) + rec(i+1, i+B, !flg, dp) + (acc[r]-acc[i+B]) - A);
+            }
+        }
+        return dp[l][r][flg]=sum;
+    }
+    else {
+        int64 sum = LOWINF;
+        chmin(sum, -rec(l+1,r,!flg,dp) - x[l]);
+        chmin(sum, -rec(l,r-1,!flg,dp) - x[r]);
+        if(r-l+1<=D) {
+            chmin(sum, -(acc[r] - acc[l-1]) + C);
+        }
+        else {
+            for(int i=l;i+D<=r;++i) {
+                chmin(sum, -(acc[i]-acc[l-1]) -rec(i+1, i+D, !flg, dp) -(acc[r]-acc[i+D]) + C);
+            }
+        }
+        return dp[l][r][flg]=sum;
+    }
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    cin >> N >> A >> B >> C >> D;
+    vector<int64> tmp; tmp.push_back(0);
+    for(int i=1;i<=N;++i) {
+        int a; cin >> a; tmp.push_back(a);
+    }
+    x = tmp;
+    acc = tmp;
+    for(int i=1;i<=N;++i) acc[i]=acc[i-1] + tmp[i-1];
+    auto dp = multivector(N+1,N+1,2,HIGHINF);
+    cout << rec(1,N,1,dp) << endl;
     return 0;
 }

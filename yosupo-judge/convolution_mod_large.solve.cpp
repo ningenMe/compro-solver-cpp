@@ -113,60 +113,60 @@ constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
  * @docs md/math/NumberTheoreticalTransform.md
  */
 template<long long mod> class NumberTheoreticalTransform {
-    inline static constexpr int prime_1004535809 =1004535809;
-    inline static constexpr int prime_998244353  =998244353;
-    inline static constexpr int prime_985661441  =985661441;
-    inline static constexpr int prime_998244353_1004535809 = ModInt<prime_998244353>(prime_1004535809).inv().x;
-    inline static constexpr int prime_985661441_1004535809 = ModInt<prime_985661441>(prime_1004535809).inv().x;
-    inline static constexpr int prime_985661441_998244353 = ModInt<prime_985661441>(prime_998244353).inv().x;
-    inline static constexpr long long prime12=((long long)prime_1004535809) * prime_998244353;
-    inline static constexpr int log2n_max = 21;
-    template<int prime> inline static constexpr array<ModInt<prime>,log2n_max> get_pow2_inv() {
-        array<ModInt<prime>,log2n_max>  ar;
+    inline static constexpr int PRIME_1004535809 =1004535809;
+    inline static constexpr int PRIME_998244353  =998244353;
+    inline static constexpr int PRIME_985661441  =985661441;
+    inline static constexpr int PRIME_998244353_1004535809 = ModInt<PRIME_998244353>(PRIME_1004535809).inv().x;
+    inline static constexpr int PRIME_985661441_1004535809 = ModInt<PRIME_985661441>(PRIME_1004535809).inv().x;
+    inline static constexpr int PRIME_985661441_998244353 = ModInt<PRIME_985661441>(PRIME_998244353).inv().x;
+    inline static constexpr long long prime12=((long long)PRIME_1004535809) * PRIME_998244353;
+    inline static constexpr int LENGTH_LOG2_MAX = 30;
+    template<int prime> inline static constexpr array<ModInt<prime>,LENGTH_LOG2_MAX> get_pow2_inv() {
+        array<ModInt<prime>,LENGTH_LOG2_MAX>  ar;
         ModInt<prime> v=1; ar[0]=v;
-        for(int i=1;i<log2n_max;++i) ar[i]=ar[i-1]/2;
+        for(int i=1;i<LENGTH_LOG2_MAX;++i) ar[i]=ar[i-1]/2;
         return ar;
     }
-    inline static constexpr array<ModInt<prime_1004535809>,log2n_max> pow2_inv_1004535809 = get_pow2_inv<prime_1004535809>();
-    inline static constexpr array<ModInt<prime_998244353>, log2n_max> pow2_inv_998244353  = get_pow2_inv<prime_998244353>();
-    inline static constexpr array<ModInt<prime_985661441>, log2n_max> pow2_inv_985661441  = get_pow2_inv<prime_985661441>();
+    inline static constexpr array<ModInt<PRIME_1004535809>,LENGTH_LOG2_MAX> pow2_inv_1004535809 = get_pow2_inv<PRIME_1004535809>();
+    inline static constexpr array<ModInt<PRIME_998244353>, LENGTH_LOG2_MAX> pow2_inv_998244353  = get_pow2_inv<PRIME_998244353>();
+    inline static constexpr array<ModInt<PRIME_985661441>, LENGTH_LOG2_MAX> pow2_inv_985661441  = get_pow2_inv<PRIME_985661441>();
 
-    template<int prime> inline static constexpr array<ModInt<prime>,log2n_max> get_base(int inv=0) {
-        array<ModInt<prime>,log2n_max> base, es, ies;
+    template<int prime> inline static constexpr array<ModInt<prime>,LENGTH_LOG2_MAX> get_base(int inv=0) {
+        array<ModInt<prime>,LENGTH_LOG2_MAX> base, es, ies;
         //TODO 3のハードコーディングを直す
-        ModInt<prime> e = ModInt<prime>(3).pow((prime - 1) >> log2n_max), ie = e.inv();
-        for (int i = log2n_max; i >= 2; --i) {
+        ModInt<prime> e = ModInt<prime>(3).pow((prime - 1) >> LENGTH_LOG2_MAX), ie = e.inv();
+        for (int i = LENGTH_LOG2_MAX; i >= 2; --i) {
             es[i - 2]  = e, ies[i - 2] = ie;
             e *= e, ie *= ie;
         }
         ModInt<prime> acc = 1;
         if(!inv) {
-            for (int i = 0; i < log2n_max - 2; ++i) {
+            for (int i = 0; i < LENGTH_LOG2_MAX - 2; ++i) {
                 base[i] = es[i] * acc;
                 acc *= ies[i];
             }
         }
         else {
-            for (int i = 0; i < log2n_max - 2; ++i) {
+            for (int i = 0; i < LENGTH_LOG2_MAX - 2; ++i) {
                 base[i] = ies[i] * acc;
                 acc *= es[i];
             }
         }
         return base;
     }
-    inline static constexpr array<ModInt<prime_1004535809>,log2n_max> base_1004535809=get_base<prime_1004535809>();
-    inline static constexpr array<ModInt<prime_1004535809>,log2n_max> ibase_1004535809=get_base<prime_1004535809>(1);
-    inline static constexpr array<ModInt<prime_998244353>,log2n_max> base_998244353=get_base<prime_998244353>();
-    inline static constexpr array<ModInt<prime_998244353>,log2n_max> ibase_998244353=get_base<prime_998244353>(1);
-    inline static constexpr array<ModInt<prime_985661441>,log2n_max> base_985661441=get_base<prime_985661441>();
-    inline static constexpr array<ModInt<prime_985661441>,log2n_max> ibase_985661441=get_base<prime_985661441>(1);
+    inline static constexpr array<ModInt<PRIME_1004535809>,LENGTH_LOG2_MAX> base_1004535809=get_base<PRIME_1004535809>();
+    inline static constexpr array<ModInt<PRIME_1004535809>,LENGTH_LOG2_MAX> ibase_1004535809=get_base<PRIME_1004535809>(1);
+    inline static constexpr array<ModInt<PRIME_998244353>,LENGTH_LOG2_MAX> base_998244353=get_base<PRIME_998244353>();
+    inline static constexpr array<ModInt<PRIME_998244353>,LENGTH_LOG2_MAX> ibase_998244353=get_base<PRIME_998244353>(1);
+    inline static constexpr array<ModInt<PRIME_985661441>,LENGTH_LOG2_MAX> base_985661441=get_base<PRIME_985661441>();
+    inline static constexpr array<ModInt<PRIME_985661441>,LENGTH_LOG2_MAX> ibase_985661441=get_base<PRIME_985661441>(1);
 
-    using Mint1 = ModInt<prime_1004535809>;
-    using Mint2 = ModInt<prime_998244353>;
-    using Mint3 = ModInt<prime_985661441>;
-    inline static ModInt<mod> garner(const Mint1& b1,const Mint2& b2,const Mint3& b3) {Mint2 t2 = (b2-b1.x)*prime_998244353_1004535809;Mint3 t3 = ((b3-b1.x)*prime_985661441_1004535809-t2.x)*prime_985661441_998244353;return ModInt<mod>(ModInt<mod>(prime12)*t3.x+b1.x+prime_1004535809*t2.x);}
+    using Mint1 = ModInt<PRIME_1004535809>;
+    using Mint2 = ModInt<PRIME_998244353>;
+    using Mint3 = ModInt<PRIME_985661441>;
+    inline static ModInt<mod> garner(const Mint1& b1,const Mint2& b2,const Mint3& b3) {Mint2 t2 = (b2-b1.x)*PRIME_998244353_1004535809;Mint3 t3 = ((b3-b1.x)*PRIME_985661441_1004535809-t2.x)*PRIME_985661441_998244353;return ModInt<mod>(ModInt<mod>(prime12)*t3.x+b1.x+PRIME_1004535809*t2.x);}
 
-    template<int prime> inline static void butterfly(vector<ModInt<prime>>& a, const array<ModInt<prime>,log2n_max>& base) {
+    template<int prime> inline static void butterfly(vector<ModInt<prime>>& a, const array<ModInt<prime>,LENGTH_LOG2_MAX>& base) {
         int h = __builtin_ctz(a.size());
         for (int i = 0; i < h; i++) {
             int w = 1 << i, p = 1 << (h - (i+1));
@@ -183,7 +183,7 @@ template<long long mod> class NumberTheoreticalTransform {
             }
         }
     }
-    template<int prime> inline static void ibutterfly(vector<ModInt<prime>>& a, const array<ModInt<prime>,log2n_max>& base) {
+    template<int prime> inline static void ibutterfly(vector<ModInt<prime>>& a, const array<ModInt<prime>,LENGTH_LOG2_MAX>& base) {
         int h = __builtin_ctz(a.size());
         for (int i = h-1; 0 <= i; i--) {
             int w = 1 << i, p = 1 << (h - (i+1));
@@ -203,9 +203,9 @@ template<long long mod> class NumberTheoreticalTransform {
     template<int prime> inline static vector<ModInt<prime>> convolution_friendrymod(
         const vector<ModInt<mod>>& a,
         const vector<ModInt<mod>>& b,
-        const array<ModInt<prime>,log2n_max>& base,
-        const array<ModInt<prime>,log2n_max>& ibase,
-        const array<ModInt<prime>,log2n_max>& pow2_inv
+        const array<ModInt<prime>,LENGTH_LOG2_MAX>& base,
+        const array<ModInt<prime>,LENGTH_LOG2_MAX>& ibase,
+        const array<ModInt<prime>,LENGTH_LOG2_MAX>& pow2_inv
     ){
         int n = a.size(), m = b.size();
         if (!n || !m) return {};
@@ -232,16 +232,16 @@ template<long long mod> class NumberTheoreticalTransform {
     template<int prime, int ZZ> class Inner {
     public:
         inline static vector<ModInt<prime>> convolution_impl(const vector<ModInt<mod>>& g,const vector<ModInt<mod>>& h){
-            auto f1 = convolution_friendrymod<prime_1004535809>(g, h, base_1004535809, ibase_1004535809, pow2_inv_1004535809);
-            auto f2 = convolution_friendrymod<prime_998244353> (g, h, base_998244353,  ibase_998244353,  pow2_inv_998244353);
-            auto f3 = convolution_friendrymod<prime_985661441> (g, h, base_985661441,  ibase_985661441,  pow2_inv_985661441);
+            auto f1 = convolution_friendrymod<PRIME_1004535809>(g, h, base_1004535809, ibase_1004535809, pow2_inv_1004535809);
+            auto f2 = convolution_friendrymod<PRIME_998244353> (g, h, base_998244353,  ibase_998244353,  pow2_inv_998244353);
+            auto f3 = convolution_friendrymod<PRIME_985661441> (g, h, base_985661441,  ibase_985661441,  pow2_inv_985661441);
 
             vector<ModInt<prime>> f(f1.size());
             for(int i=0; i<f1.size(); ++i) f[i] = garner(f1[i],f2[i],f3[i]);
             return f;
         }
     };
-    template<int prime> class Inner<prime, prime_998244353> {
+    template<int prime> class Inner<prime, PRIME_998244353> {
     public:
         inline static vector<ModInt<prime>> convolution_impl(const vector<ModInt<mod>>& g,const vector<ModInt<mod>>& h) { 
             return convolution_friendrymod<prime>(g,h,base_998244353,ibase_998244353,pow2_inv_998244353);

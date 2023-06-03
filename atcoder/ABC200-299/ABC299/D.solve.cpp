@@ -39,5 +39,14 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N; cin >> N;
+    int l=0,r=N-1;
+    while(r-l>1) {
+        int m = (r+l)/2;
+        cout << "? " << m+1 << endl;
+        int x; cin >> x;
+        (x==0 ? l:r) = m;
+    }
+    cout << "! " << l+1 << endl;
     return 0;
 }

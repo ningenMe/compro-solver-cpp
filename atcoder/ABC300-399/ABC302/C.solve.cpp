@@ -39,5 +39,25 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N,M; cin >> N >> M;
+    vector<string> S(N);
+    for(int i=0;i<N;++i) cin >> S[i];
+    vector<int> idx(N);
+    iota(ALL(idx),0);
+    do {
+        vector<string> T(N);
+        for(int i=0;i<N;++i) T[i]=S[idx[i]];
+
+        bool flg = true;
+        for(int i=0;i+1<N;++i) {
+            int a=0;
+            for(int j=0;j<M;++j) {
+                if(T[i][j]!=T[i+1][j]) a++;
+            }
+            if(a>1) flg=false;
+        }
+        corner(flg,"Yes");
+    } while(next_permutation(ALL(idx)));
+    cout << "No" << endl;
     return 0;
 }

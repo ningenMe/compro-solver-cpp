@@ -39,5 +39,30 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    set<int64> st;
+    for(int64 i=0;i<=60;++i) {
+        for(int64 j=0;j<60; ++j) {
+            for(int64 k=0;k<60; ++k) {
+                if(i==j || j==k || k==i) continue;
+                int64 sum=0;
+                sum += (1LL<<i);
+                sum += (1LL<<j);
+                sum += (1LL<<k);
+                st.insert(sum);
+            }
+        }
+    }
+    int T; cin >> T;
+    while(T--) {
+        int64 x; cin >> x;
+        auto itr = st.upper_bound(x);
+        int64 ans;
+        if(itr == st.begin()) ans = -1;
+        else {
+            itr--;
+            ans = *itr;
+        }
+        cout << ans << "\n";
+    }
     return 0;
 }

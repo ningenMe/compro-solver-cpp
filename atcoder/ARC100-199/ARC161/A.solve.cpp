@@ -39,5 +39,22 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N; cin >> N;
+    vector<int64> A(N),B;
+    for(int i=0;i<N;++i) cin >> A[i];
+    sort(ALL(A));
+    vector<int64> L,R;
+    for(int i=0;i<N/2+1;++i) L.push_back(A[i]);
+    for(int i=N/2+1;i<N;++i) R.push_back(A[i]);
+    B.push_back(L[0]);
+    for(int i=0;i<R.size();++i) {
+        B.push_back(R[i]);
+        B.push_back(L[i+1]);
+    }
+    int flg = 1;
+    for(int i=1;i+1<N;i+=2) {
+        if(!(B[i-1] < B[i] && B[i] > B[i+1])) flg = 0;
+    }
+    Yn(flg);
     return 0;
 }

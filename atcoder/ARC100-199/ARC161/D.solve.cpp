@@ -39,5 +39,24 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int64 N,D; cin >> N >> D;
+    corner(N*(N-1)/2 < N*D, "No");
+    cout << "Yes" << "\n";
+    set<pair<int64,int64>> st;
+    for(int i=1;i<=D;++i) {
+        for(int k=0;k<i;++k) {
+            int64 curr = k;
+            if(st.count({curr, (curr+i) % N})) break;
+            for(int j=0;j<N;++j) {
+                int64 next=(curr+i) % N;
+                if(st.count({curr, next})) break;
+                st.insert({curr,next});
+                curr = next;
+            }
+        }
+    }
+    for(auto p:st) {
+        cout << p.first+1 << " " << p.second+1 << "\n";
+    }
     return 0;
 }

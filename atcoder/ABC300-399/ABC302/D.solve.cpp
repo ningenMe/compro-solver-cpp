@@ -39,5 +39,21 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int64 N,M,D; cin >> N >> M >> D;
+    vector<int64> A(N),B(M);
+    for(int i=0;i<N;++i) cin >> A[i];
+    for(int i=0;i<M;++i) cin >> B[i];
+    sort(ALL(A));sort(ALL(B));
+    int64 ans = -1;
+    for(int i=0;i<N;++i) {
+        auto itr = upper_bound(ALL(B),A[i]+D);
+        if(itr == B.begin()) continue;
+        --itr;
+
+        int64 x = A[i];
+        int64 y = *itr;
+        if(abs(x-y)<=D) chmax(ans,x+y);
+    }
+    cout << ans << endl;
     return 0;
 }

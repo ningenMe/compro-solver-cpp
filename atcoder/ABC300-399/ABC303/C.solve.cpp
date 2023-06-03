@@ -39,5 +39,36 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N,M,H,K; cin >> N >> M >> H >> K;
+    string S; cin >> S;
+    set<pair<int,int>> st;
+    for(int i=0;i<M;++i) {
+        int x,y; cin >> x >> y;
+        st.insert({x,y});
+    }
+    int nx=0,ny=0;
+    int HP=H;
+    for(int i=0;i<N;++i) {
+        char c = S[i];
+        if(c=='R') {
+            nx+=1;
+        }
+        if(c=='L') {
+            nx-=1;
+        }
+        if(c=='U') {
+            ny+=1;
+        }
+        if(c=='D') {
+            ny-=1;
+        }
+        HP--;
+        corner(HP<0,"No");
+        if(HP<K && st.count({nx,ny})) {
+            HP=K;
+            st.erase({nx,ny});
+        }
+    }
+    cout << "Yes" << endl;
     return 0;
 }

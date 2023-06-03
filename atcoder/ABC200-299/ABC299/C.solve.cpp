@@ -33,11 +33,42 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+vector<pair<char,long long>> Rarts(string S){
+	char ch = S[0];
+	int cnt = 1;
+	vector<pair<char,long long>> res;
+ 	for(int i = 1; i < S.size(); ++i){
+		 if(S[i]==ch) {
+			 cnt++;
+		 }
+		 else{
+			 res.push_back({ch,cnt});
+			 ch = S[i];
+			 cnt = 1;
+		 }
+	}
+	res.push_back({ch,cnt});
+	return res;
+}
+
+//verify https://atcoder.jp/contests/agc039/tasks/agc039_a
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N; cin >> N;
+    string S; cin >> S;
+    auto ra = Rarts(S);
+    int M = ra.size();
+    int64 maxi = -1;
+    for(int i=0;i<M;++i) {
+        if(ra[i].first != '-') continue;
+        if(0<=i-1 && ra[i-1].first == 'o') chmax(maxi,ra[i-1].second);
+        if(i+1 <M && ra[i+1].first == 'o') chmax(maxi,ra[i+1].second);
+    }
+    cout << maxi << endl;
     return 0;
 }

@@ -39,5 +39,39 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+
+    vector<int> dy={-1,-1,-1, 0,0, 1,1,1};
+    vector<int> dx={-1, 0, 1,-1,1,-1,0,1};
+
+    int H,W; cin >> H >> W;
+    vector<string> vs(H);
+    for(int i=0;i<H;++i) cin >> vs[i];
+    for(int i=0;i<H;++i) {
+        for(int j=0;j<W;++j) {
+            if(vs[i][j]!='s') continue;
+            for(int k=0;k<8;++k) {
+                string T="";
+                vector<int> vy;
+                vector<int> vx;
+                for(int l=0;l<5;++l) {
+                    int y = i + (dy[k] * l);
+                    int x = j + (dx[k] * l);
+
+                    if(0 <= y && y < H && 0 <= x && x < W) {
+                        T.push_back(vs[y][x]);
+                        vy.push_back(y+1);
+                        vx.push_back(x+1);
+                    }
+                }
+                if(T=="snuke") {
+                    for(int l=0;l<5;++l) {
+                        cout << vy[l] << " " << vx[l] << endl;
+                    }
+                    return 0;
+                }
+            }
+
+        }
+    }
     return 0;
 }

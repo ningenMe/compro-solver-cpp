@@ -39,5 +39,31 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int64 X,Y,Z; cin >> X >> Y >> Z;
+    string S; cin >> S;
+    S = "." + S;
+    int N = S.size();
+    auto dp = multivector(N,2,HIGHINF);
+    dp[0][0] = 0;
+    for(int i=1;i<N;++i) {
+        if(S[i]=='a') {
+            chmin(dp[i][0], dp[i-1][0]+X);
+            chmin(dp[i][1], dp[i-1][0]+X+Z);
+            chmin(dp[i][1], dp[i-1][0]+Z+Y);
+            chmin(dp[i][1], dp[i-1][1]+Y);
+            chmin(dp[i][0], dp[i-1][1]+Y+Z);
+            chmin(dp[i][0], dp[i-1][1]+Z+X);
+        }
+        if(S[i]=='A') {
+            chmin(dp[i][0], dp[i-1][0]+Y);
+            chmin(dp[i][1], dp[i-1][1]+X);
+
+            chmin(dp[i][1], dp[i-1][0]+X+Z);
+            chmin(dp[i][1], dp[i-1][0]+Z+Y);
+            chmin(dp[i][0], dp[i-1][1]+Y+Z);
+            chmin(dp[i][0], dp[i-1][1]+Z+X);
+        }
+    }
+    cout << min(dp[N-1][0],dp[N-1][1]) << endl;
     return 0;
 }

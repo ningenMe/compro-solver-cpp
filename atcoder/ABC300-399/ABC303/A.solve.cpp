@@ -39,5 +39,19 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int N; cin >> N;
+    string S,T; cin >> S >> T;
+    int flg = 1;
+    for(int i=0;i<N;++i) {
+        char s=S[i];
+        char t=T[i];
+        if(s==t) continue;
+        if(s=='1' && t=='l') continue;
+        if(s=='l' && t=='1') continue;
+        if(s=='0' && t=='o') continue;
+        if(s=='o' && t=='0') continue;
+        flg=0;
+    }
+    Yn(flg);
     return 0;
 }

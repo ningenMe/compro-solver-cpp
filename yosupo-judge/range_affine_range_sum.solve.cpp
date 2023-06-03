@@ -296,6 +296,7 @@ int main(){
 			modint b,c; cin >> b >> c;
 			seg.update(l,r,{b,c});
 		}
+		seg.print();
     }
 }
 

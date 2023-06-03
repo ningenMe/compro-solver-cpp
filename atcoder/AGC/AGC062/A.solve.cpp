@@ -33,11 +33,60 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+string get(string S) {
+    vector<int> a,b;
+    for(int i=0;i+1<S.size();++i) {
+        if(S[i]=='A') a.push_back(i);
+        if(S[i]=='B') b.push_back(i);
+    }
+    string T;
+    for(int i:a) T.push_back(S[i+1]);
+    for(int i:b) T.push_back(S[i+1]);
+    return T;
+}
+
+char solve() {
+    int N; cin >> N;
+    string S; cin >> S;
+
+    int is_all_a=1;
+    for(int i=0;i<N;++i) if(S[i]=='B') is_all_a=0;
+    if(is_all_a) {
+        return 'A';
+    }
+    
+    int is_all_b=1;
+    for(int i=0;i<N;++i) if(S[i]=='B') is_all_b=0;
+    if(is_all_b) {
+        return 'B';
+    }
+
+    int is_ba=0;
+    for(int i=0;i+1<N;++i) if(S[i]=='B' && S[i+1]=='A') is_ba=1;
+    if(is_ba) {
+        return 'A';
+    }
+    return 'B';
+
+    //A**A -> A
+    //B**B -> B
+    //A*AB*B -> B
+    //末尾がA -> A
+    //Bの右がA -> 末尾がA -> A
+    //Bのラストの右がB -> 末尾がA -> A
+
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int T; cin >> T;
+    while(T--) {
+        char ans = solve();
+        cout << ans << "\n";
+    }
     return 0;
 }
