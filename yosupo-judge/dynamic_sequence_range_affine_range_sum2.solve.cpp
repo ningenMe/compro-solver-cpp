@@ -62,33 +62,43 @@ public:
 #define write(arg) FastIO::write(arg)
 
 /*
- * @title LazySplayTreeSequence - 遅延評価SplayTree列
- * @docs md/binary-search-tree/LazySplayTreeSequence.md
+ * @title LazyRandomizedBinarySearchTreeSequence - 遅延評価ランダム平衡二分探索木列
+ * @docs md/binary-search-tree/LazyRandomizedBinarySearchTreeSequence.md
  */
-template<class Monoid> class LazySplayTreeSequence {
+template<class Monoid> class LazyRandomizedBinarySearchTreeSequence {
     using TypeNode = typename Monoid::TypeNode;
     using TypeLazy = typename Monoid::TypeLazy;
+    unsigned int x = 123456789, y = 362436069, z = 521288629, w = 88675123;
+    unsigned int xor_shift() {
+        unsigned int t = (x ^ (x << 11)); x = y; y = z; z = w;
+        return (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8)));
+    }
     struct Node {
     private:
-        void build() {left = right = nullptr;size = 1;rev=0;range_lazy = Monoid::unit_lazy;}
+        void build() {left = right = nullptr;size = 1; rev=0; range_lazy = Monoid::unit_lazy;}
     public:
-        Node *left, *right, *parent;
+        Node *left, *right;
         TypeNode value, range_value;
         TypeLazy range_lazy;
         int size,rev;
-        Node() : value(Monoid::unit_node), range_value(Monoid::unit_node), parent(parent) {build();}
-        Node(const TypeNode v) : value(v),range_value(v) {build();}
-        friend ostream &operator<<(ostream &os, const Node* node) {return os << "{" << node->value << ", " << node->size << "}";}
+        Node() : value(Monoid::unit_node), range_value(Monoid::unit_node) {build();}
+        Node(TypeNode v) : value(v), range_value(v) {build();}
+        friend ostream &operator<<(ostream &os, const Node* node) {return os << "{" << node->value << ", " << node->range_value << ", " << node->range_lazy << ", " << node->size << "}";}
     };
     Node* root;
     inline int size(Node *node) {return node==nullptr ? 0 : node->size;}
     inline TypeNode range_value(Node *node) {return node==nullptr ? Monoid::unit_node : node->range_value;}
-    inline void update(Node *node) {
-        if(node==nullptr) return;
-		if(node->left != nullptr) propagate(node->left);
-		if(node->right != nullptr) propagate(node->right);
+    inline TypeNode get(Node *node, size_t k) {
+        if (node==nullptr) return Monoid::unit_node;
+        propagate(node);
+        if (k == size(node->left)) return node->value;
+        if (k < size(node->left)) return get(node->left, k);
+        else return get(node->right, k-1 - size(node->left));
+    }
+    inline Node* update(Node *node) {
         node->size = size(node->left) + size(node->right) + 1;
         node->range_value = Monoid::func_fold(Monoid::func_fold(range_value(node->left),node->value),range_value(node->right));
+        return node;
     }
     inline void propagate(Node *node) {
         if(node==nullptr || (node->range_lazy == Monoid::unit_lazy && node->rev == 0)) return;
@@ -99,190 +109,98 @@ template<class Monoid> class LazySplayTreeSequence {
         if(node->rev) swap(node->left,node->right), node->rev = 0;
         node->range_lazy = Monoid::unit_lazy;
     }
-    inline void rotate_left(Node* node){
-        Node* parent = node->parent;
-        if(parent->parent == nullptr) root = node;
-        else if (parent->parent->left == parent) parent->parent->left = node;
-        else parent->parent->right = node;
-
-        node->parent = parent->parent;
-        parent->parent = node;
-        if(node->left != nullptr) node->left->parent = parent; 
-        parent->right = node->left;
-        node->left = parent;
+    inline Node* merge_impl(Node *left, Node *right) {
+        propagate(left);
+        propagate(right);
+        if (left==nullptr)  return right;
+        if (right==nullptr) return left;
+        if (xor_shift() % (left->size + right->size) < left->size) {
+            left->right = merge_impl(left->right, right);
+            return update(left);
+        }
+        else {
+            right->left = merge_impl(left, right->left);
+            return update(right);
+        }
     }
-    inline void rotate_right(Node* node){
-        Node* parent = node->parent;
-        if(parent->parent == nullptr) root = node;
-        else if (parent->parent->left == parent) parent->parent->left = node;
-        else parent->parent->right = node;
-
-        node->parent = parent->parent;
-        parent->parent = node;
-        if(node->right != nullptr) node->right->parent = parent; 
-        parent->left = node->right;
-        node->right = parent;
-    }
-    inline void splay(Node* node){
+    inline pair<Node*, Node*> split_impl(Node* node, int k) {
+        if (node==nullptr) return make_pair(nullptr, nullptr);
         propagate(node);
-        while(node->parent != nullptr){
-            Node* parent = node->parent;
-            Node* grand_parent = parent->parent;
-            propagate(grand_parent);
-            propagate(parent);
-            propagate(node);
-            if(parent->left == node){
-                if(grand_parent == nullptr){ rotate_right(node); }
-                else if(grand_parent->left  == parent){ rotate_right(parent); rotate_right(node); }
-                else if(grand_parent->right == parent){ rotate_right(node); rotate_left(node); }
-            }
-            else{
-                if(grand_parent == nullptr){ rotate_left(node); }
-                else if(grand_parent->left  == parent){ rotate_left(node); rotate_right(node); }
-                else if(grand_parent->right == parent){ rotate_left(parent); rotate_left(node); }
-            }
-            update(grand_parent);
-            update(parent);
-            update(node);
+        if (k <= size(node->left)) {
+            propagate(node->right);
+            pair<Node*, Node*> sub = split_impl(node->left, k);
+            node->left = sub.second;
+            return make_pair(sub.first, update(node));
         }
+        else {
+            propagate(node->left);
+            pair<Node*, Node*> sub = split_impl(node->right, k - 1 - size(node->left));
+            node->right = sub.first;
+            return make_pair(update(node), sub.second);
+        }
+    }
+    inline TypeNode fold_impl(Node *node, int l, int r) {
+        if (l < 0 || size(node) <= l || r<=0 || r-l <= 0) return Monoid::unit_node;
+        propagate(node);
+        if (l == 0 && r == size(node)) return range_value(node);
+        TypeNode value = Monoid::unit_node;
+        int sl = size(node->left);
+        if(sl > l) value = Monoid::func_fold(value,fold_impl(node->left,l,min(sl,r)));
+        l = max(l-sl,0), r -= sl;
+        if(l == 0 && r > 0) value = Monoid::func_fold(value,node->value);
+        l = max(l-1,0), r -= 1;
+        if(l >= 0 && r > l) value = Monoid::func_fold(value,fold_impl(node->right,l,r));
+        return value;
+    }
+    inline void operate_impl(Node *node, int l, int r, TypeLazy lazy) {
+        if(l < 0 || size(node) <= l || r <= 0 || r-l <= 0) return;
+        if (l == 0 && r == size(node)) {
+            node->range_lazy = Monoid::func_lazy(node->range_lazy,lazy);
+            propagate(node);
+            return;
+        }
+        int sl = size(node->left);
+        propagate(node->left);
+        propagate(node->right);
+        if(sl > l) operate_impl(node->left,l,min(sl,r),lazy);
+        l = max(l-sl,0), r -= sl;
+        if(l == 0 && r > 0) node->value = Monoid::func_operate(node->value,lazy,0,1);
+        l = max(l-1,0), r -= 1;
+        if(l >= 0 && r > l) operate_impl(node->right,l,r,lazy);
         update(node);
     }
-    Node* get_impl(size_t k) {
-        Node* node = root;
-        while(1) {
-            propagate(node);
-            if(size(node->left) == k) break;
-            if(size(node->left) > k) {
-                node = node->left;
-            }
-            else {
-                k -= size(node->left) + 1;
-                node = node->right;
-            }
-        }
-        splay(node);
-        return node;
-    }
-    //[l,r)
-    Node* get_range_impl(const size_t l, const size_t r) {
-        if(r-l==size(root)) return root;
-        if(l==0) return get_impl(r)->left;
-        if(r==size(root)) return get_impl(l-1)->right;
-        Node* target_right = get_impl(r);
-        Node* target_left = target_right->left;
-        root = target_left;
-
-        target_left->parent = nullptr;
-        target_left = get_impl(l-1);
-        root=target_right;
-
-        target_right->left=target_left;
-        target_left->parent=target_right;
-        update(target_right);
-        return target_left->right;
-    }
-    void insert_impl(const size_t k, const TypeNode value) {
-        Node* node = new Node(value);
-        if(k == 0){
-            node->right = root;
-            if(root != nullptr) root->parent = node;
-            root = node;
-            update(node);
-            return;
-        }
-        if(k == size(root)){
-            node->left = root;
-            root->parent = node;
-            root = node;
-            update(node);
-            return;
-        }
-        Node* target = get_impl(k);
-        node->left = target->left;
-        node->right = target;
-        root = node;
-        target->left->parent = node;
-        target->parent = node;
-        target->left = nullptr;
-        update(target);
-        update(node);
-    }
-    void erase_impl(const size_t k){
-        Node* target = get_impl(k);
-        if(k == 0){
-            root = target->right;
-            if(root != nullptr) root->parent = nullptr;
-            return;
-        }
-        else if(k+1 == size(root)){
-            root = target->left;
-            if(root != nullptr) root->parent = nullptr;
-            return;
-        }
-        Node* target_left = target->left;
-        Node* target_right = target->right;
-        target_right->parent = nullptr;
-        root = target_right;
-        get_impl(0);
-        target_right = root;  
-        target_right->left = target_left;
-        target_left->parent = target_right;
-        update(target_right);
-    }
-    inline TypeNode fold_impl(int l, int r) {
-        if (l < 0 || size(root) <= l || r<=0 || r-l <= 0) return Monoid::unit_node;
-		Node* node=get_range_impl(l,r);
-		propagate(node);
-		update(node);
-        return range_value(node);
-    }
-    void operate_impl(int l, int r, TypeLazy lazy) {
+    inline void reverse_impl(int l, int r) {
         if(l < 0 || size(root) <= l || r <= 0 || r-l <= 0) return;
-        Node* node=get_range_impl(l,r);
-        node->range_lazy = Monoid::func_lazy(node->range_lazy,lazy);
-        splay(node);
+        pair<Node*,Node*> tmp1 = split_impl(this->root,l);
+        pair<Node*,Node*> tmp2 = split_impl(tmp1.second,r-l);
+        Node* nl = tmp1.first;
+        Node* nc = tmp2.first;
+        Node* nr = tmp2.second;
+        nc->rev ^= 1;
+        this->root = merge_impl(merge_impl(nl,nc),nr);
     }
-    void reverse_impl(int l, int r) {
-        if (l < 0 || size(root) <= l || r<=0 || r-l <= 0) return;
-        Node* node=get_range_impl(l,r);
-        node->rev ^= 1;
-        splay(node);
+    inline void insert_impl(const size_t k, const TypeNode value) {
+        pair<Node*, Node*> sub = split_impl(this->root, k);
+        this->root = this->merge_impl(this->merge_impl(sub.first, new Node(value)), sub.second);
     }
-    void print_impl() {
-        int M=5;
-        vector<vector<Node*>> vv(M);
-        vv[0].push_back(root);
-        for(int i=0;i+1<M;++i) {
-            for(int j=0;j<vv[i].size();++j) {
-                auto le = (vv[i][j]==nullptr ? nullptr : vv[i][j]->left);
-                auto ri = (vv[i][j]==nullptr ? nullptr : vv[i][j]->right);
-                vv[i+1].push_back(le);
-                vv[i+1].push_back(ri);
-            }
-        }
-        for(int i=0;i<M;++i) {
-            int MM = vv[i].size();
-            for(int j=0;j<MM;++j) {
-				if(vv[i][j]==nullptr) {
-					cout << "{:},";
-				}
-				else {
-					cout << "{" << vv[i][j]->value << ":" << vv[i][j]->range_lazy << "}, ";
-				}
-            }
-            cout << endl;
-        }
+    inline void erase_impl(const size_t k) {
+        if(size(this->root) <= k) return;
+        auto sub = split_impl(this->root,k);
+        this->root = merge_impl(sub.first, split_impl(sub.second, 1).second);
     }
 public:
-    LazySplayTreeSequence(): root(nullptr) {}
-    inline TypeNode get(const size_t k) {return get_impl(k)->value; }
-    inline int size() {return size(root); }
+    LazyRandomizedBinarySearchTreeSequence() : root(nullptr) {}
+    inline int size() {return size(this->root);}
+    inline int empty(void) {return bool(size()==0);}
+    inline Node* merge(Node *left, Node *right) {return merge_impl(left,right);}
+    inline pair<Node*, Node*> split(int k) {return split_impl(this->root,k);}
     inline void insert(const size_t k, const TypeNode value) {insert_impl(k,value);}
-    inline void erase(const size_t k) { erase_impl(k);}
-    inline void operate(const int l, const int r, const TypeLazy lazy) {operate_impl(l,r,lazy);}
-    inline TypeNode fold(int l, int r) {return fold_impl(l,r);}
+    inline void erase(const size_t k) {erase_impl(k);}
+    inline TypeNode get(size_t k) {return get(this->root, k);}
+    inline void operate(const int l, const int r, const TypeLazy lazy) {propagate(this->root); operate_impl(this->root,l,r,lazy);}
+    inline TypeNode fold(int l, int r) {return fold_impl(this->root,l,r);}
     inline void reverse(int l, int r) {reverse_impl(l,r);}
-    void print() {print_impl();}
+    void print() {int m = size(this->root); for(int i=0;i<m;++i) cout << get(i) << " \n"[i==m-1];}
 };
 
 /*
@@ -349,7 +267,7 @@ using modint = ModInt<MOD_998244353>;
 int main(){
     cin.tie(0);ios::sync_with_stdio(false);
     int N,Q; read(N); read(Q);
-    LazySplayTreeSequence<MonoidRangeFoldSumRangeOperateAffine<modint,pair<modint,modint>>> st;
+    LazyRandomizedBinarySearchTreeSequence<MonoidRangeFoldSumRangeOperateAffine<modint,pair<modint,modint>>> st;
     for(int i=0;i<N;++i) {
         int a; read(a); st.insert(i,a);
     }

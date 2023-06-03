@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <array>
+#include <cassert>
 using namespace std;
 
 /*
@@ -59,16 +60,162 @@ public:
 };
 #define read(arg) FastIO::read(arg)
 #define write(arg) FastIO::write(arg)
+// montgomery modint (MOD < 2^62, MOD is odd)
+struct MontgomeryModInt64 {
+    using mint = MontgomeryModInt64;
+    using u64 = uint64_t;
+    using u128 = __uint128_t;
+    
+    // static menber
+    inline static u64 MOD;
+    inline static u64 INV_MOD;  // INV_MOD * MOD ≡ 1 (mod 2^64)
+    inline static u64 T128;  // 2^128 (mod MOD)
+    
+    // inner value
+    u64 val;
+    
+    // constructor
+    MontgomeryModInt64() : val(0) { }
+    MontgomeryModInt64(long long v) : val(reduce((u128(v) + MOD) * T128)) { }
+    u64 get() const {
+        u64 res = reduce(val);
+        return res >= MOD ? res - MOD : res;
+    }
+    
+    // mod getter and setter
+    static u64 get_mod() { return MOD; }
+    static void set_mod(u64 mod) {
+        assert(mod < (1LL << 62));
+        assert((mod & 1));
+        MOD = mod;
+        T128 = -u128(mod) % mod;
+        INV_MOD = get_inv_mod();
+    }
+    static u64 get_inv_mod() {
+        u64 res = MOD;
+        for (int i = 0; i < 5; ++i) res *= 2 - MOD * res;
+        return res;
+    }
+    static u64 reduce(const u128 &v) {
+        return (v + u128(u64(v) * u64(-INV_MOD)) * MOD) >> 64;
+    }
+    
+    // arithmetic operators
+    mint operator - () const { return mint() - mint(*this); }
+    mint operator + (const mint &r) const { return mint(*this) += r; }
+    mint operator - (const mint &r) const { return mint(*this) -= r; }
+    mint operator * (const mint &r) const { return mint(*this) *= r; }
+    mint operator / (const mint &r) const { return mint(*this) /= r; }
+    mint& operator += (const mint &r) {
+        if ((val += r.val) >= 2 * MOD) val -= 2 * MOD;
+        return *this;
+    }
+    mint& operator -= (const mint &r) {
+        if ((val += 2 * MOD - r.val) >= 2 * MOD) val -= 2 * MOD;
+        return *this;
+    }
+    mint& operator *= (const mint &r) {
+        val = reduce(u128(val) * r.val);
+        return *this;
+    }
+    mint& operator /= (const mint &r) {
+        *this *= r.inv();
+        return *this;
+    }
+    mint inv() const { return pow(MOD - 2); }
+    mint pow(u128 n) const {
+        mint res(1), mul(*this);
+        while (n > 0) {
+            if (n & 1) res *= mul;
+            mul *= mul;
+            n >>= 1;
+        }
+        return res;
+    }
+
+    // other operators
+    bool operator == (const mint &r) const {
+        return (val >= MOD ? val - MOD : val) == (r.val >= MOD ? r.val - MOD : r.val);
+    }
+    bool operator != (const mint &r) const {
+        return (val >= MOD ? val - MOD : val) != (r.val >= MOD ? r.val - MOD : r.val);
+    }
+    friend istream& operator >> (istream &is, mint &x) {
+        long long t;
+        is >> t;
+        x = mint(t);
+        return is;
+    }
+    friend ostream& operator << (ostream &os, const mint &x) {
+        return os << x.get();
+    }
+    friend mint modpow(const mint &r, long long n) {
+        return r.pow(n);
+    }
+    friend mint modinv(const mint &r) {
+        return r.inv();
+    }
+};
 
 /*
- * @title Prime - 高速素因数分解・ミラーラビン素数判定
+ * @title Prime - 高速素因数分解・ミラーラビン素数判定・Gcd・Lcm
  * @docs md/math/Prime.md
  */
 class Prime{
     using int128 = __int128_t;
-    using int64  = long long;
+    using u128 = __uint128_t;
     using u64 = unsigned long long;
     using u32 = unsigned int;
+    class MontgomeryMod {
+        u64 mod,inv_mod,pow2_128;
+        inline u64 reduce(const u128& val) {
+            return (val + u128(u64(val) * u64(-inv_mod)) * mod) >> 64;
+        }
+        inline u128 init_reduce(const u64& val) {
+            return reduce((u128(val) + mod) * pow2_128);
+        }
+        inline u64 mul_impl(const u64 l, const u64 r) {
+            return reduce(u128(l)*r);
+        }
+    public:
+        MontgomeryMod(const u64 mod):mod(mod),pow2_128(-u128(mod)%mod) {
+            inv_mod = mod;
+            for (int i = 0; i < 5; ++i) inv_mod *= 2 - mod * inv_mod;
+        }
+        //x^n % mod
+        inline u64 pow(const u64& x, u64 n) {
+            u64 mres = init_reduce(1);
+            for (u64 mx = init_reduce(x); n > 0; n >>= 1, mx=mul_impl(mx,mx)) if (n & 1) mres = mul_impl(mres,mx);
+            mres=reduce(mres);
+            return mres >= mod ? mres - mod : mres;
+        }
+        inline u64 mul(const u64& l, const u64& r) {
+            u64 ml=init_reduce(l),mr=init_reduce(r);
+            u64 mres=reduce(mul_impl(ml,mr));
+            return mres >= mod ? mres - mod : mres;
+        }
+    };
+    template<size_t sz> inline static constexpr bool miller_rabin(const u64& n, const array<u64,sz>& ar) {
+        u32 i,s=0; 
+        u64 m = n - 1;
+        for (;!(m&1);++s,m>>=1);
+        // MontgomeryMod mmod(n);
+        MontgomeryModInt64::set_mod(n);
+        for (const u64& a: ar) {
+            if(a>=n) break;
+            MontgomeryModInt64 r = MontgomeryModInt64(a).pow(m);
+            // u64 r=mmod.pow(a,m);
+            if(r != 1) {
+                for(i=0; i<s; ++i) {
+                    if(r == n-1) break;
+                    // r = mmod.mul(r,r);
+                    r *= r;
+                }
+                if(i==s) return false;
+            }
+        }
+        return true;
+    }
     inline static long long gcd_impl(long long n, long long m) {
         static constexpr long long K = 5;
         long long t,s;
@@ -100,10 +247,10 @@ class Prime{
     }
     inline static constexpr array<u64,3> ar1={2ULL, 7ULL, 61ULL};
     inline static constexpr array<u64,7> ar2={2ULL,325ULL,9375ULL,28178ULL,450775ULL,9780504ULL,1795265022ULL};
-    inline static constexpr int64 rho(int64 n){
+    inline static constexpr u64 rho(const u64& n){
         if(miller_rabin(n)) return n;
         if(n%2 == 0) return 2;
-        for(int64 c=1,x=2,y=2,d=0;;c++){
+        for(u64 c=1,x=2,y=2,d=0;;c++){
             do{
                 x=(int128(x)*x+c)%n;
                 y=(int128(y)*y+c)%n;
@@ -113,31 +260,14 @@ class Prime{
             if(d<n) return d;
         }
     }
-    inline static vector<int64> factor(const int64 n) {
+    inline static vector<u64> factor(const u64& n) {
         if(n <= 1) return {};
-        int64 p = rho(n);
+        u64 p = rho(n);
         if(p == n) return {p};
         auto l = factor(p);
         auto r = factor(n / p);
         copy(r.begin(), r.end(), back_inserter(l));
         return l;
-    }
-    template<size_t sz> inline static constexpr bool miller_rabin(const u64& n, const array<u64,sz>& ar) {
-        u32 i,s=0; 
-        u64 m = n - 1;
-        for (;!(m&1);++s,m>>=1);
-        for (const u64& a: ar) {
-            if(a>=n) break;
-            u64 r=pow(a,m,n);
-            if(r != 1) {
-                for(i=0; i<s; ++i) {
-                    if(r == n-1) break;
-                    r = (int128(r)*r)%n;
-                }
-                if(i==s) return false;
-            }
-        }
-        return true;
     }
     inline static constexpr bool miller_rabin(const u64 n) {
         if(n <= 1) return false;
@@ -148,12 +278,12 @@ class Prime{
         if(n < 4759123141LL) return miller_rabin(n, ar1);
         return miller_rabin(n, ar2);
     }
-    inline static vector<pair<int64,int64>> factorization_impl(const int64 n) {
+    inline static vector<pair<u64,u64>> factorization_impl(const u64 n) {
         auto v = factor(n);
-        vector<pair<int64,int64>> vp;
+        vector<pair<u64,u64>> vp;
         sort(v.begin(),v.end());
-        int64 prev = 0;
-        for(int64 p:v) {
+        u64 prev = 0;
+        for(u64& p:v) {
             if(p == prev) vp.back().second++;
             else vp.emplace_back(p,1);
             prev=p;
@@ -161,8 +291,8 @@ class Prime{
         return vp;
     }
 public:
-    inline static constexpr bool is_prime(const u64 n) { return is_prime(n); }
-    inline static vector<pair<int64,int64>> factorization(const int64 n) {return factorization_impl(n);}
+    inline static constexpr bool is_prime(const u64 n) { return miller_rabin(n); }
+    inline static vector<pair<u64,u64>> factorization(const u64 n) {return factorization_impl(n);}
     inline static constexpr long long gcd(long long n, long long m) { return (n>m ? pre(n,m) : pre(m,n));}
     inline static constexpr long long naive_gcd(long long a, long long b) { return (b ? naive_gcd(b, a % b):a);}
     inline static constexpr long long lcm(long long a, long long b) {return (a*b ? (a / gcd(a, b)*b): 0);}

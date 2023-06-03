@@ -62,6 +62,21 @@ public:
 #define write(arg) FastIO::write(arg)
 
 /*
+ * @title MonoidRangeSumRangeAdd - fold:区間和, opearate:区間加算
+ * @docs md/operator/monoid-lazy/MonoidRangeSumRangeAdd.md
+ */
+template<class T, class U> struct MonoidRangeFoldSumRangeOperateAdd {
+	using TypeNode = T;
+	using TypeLazy = U;
+	inline static constexpr TypeNode unit_node = 0;
+	inline static constexpr TypeLazy unit_lazy = 0;
+	inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+	inline static constexpr TypeLazy func_lazy(TypeLazy old_lazy,TypeLazy new_lazy){return old_lazy+new_lazy;}
+	inline static constexpr TypeNode func_operate(TypeNode node,TypeLazy lazy,int l, int r){return node+lazy*(r-l);}
+	inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var <= nodeVal;}
+};
+
+/*
  * @title LazySplayTreeSequence - 遅延評価SplayTree列
  * @docs md/binary-search-tree/LazySplayTreeSequence.md
  */
@@ -285,94 +300,20 @@ public:
     void print() {print_impl();}
 };
 
-/*
- * @title ModInt
- * @docs md/util/ModInt.md
- */
-template<long long mod> class ModInt {
-public:
-    long long x;
-    constexpr ModInt():x(0) {}
-    constexpr ModInt(long long y) : x(y>=0?(y%mod): (mod - (-y)%mod)%mod) {}
-    constexpr ModInt &operator+=(const ModInt &p) {if((x += p.x) >= mod) x -= mod;return *this;}
-    constexpr ModInt &operator+=(const long long y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
-    constexpr ModInt &operator+=(const int y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
-    constexpr ModInt &operator-=(const ModInt &p) {if((x += mod - p.x) >= mod) x -= mod;return *this;}
-    constexpr ModInt &operator-=(const long long y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
-    constexpr ModInt &operator-=(const int y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
-    constexpr ModInt &operator*=(const ModInt &p) {x = (x * p.x % mod);return *this;}
-    constexpr ModInt &operator*=(const long long y) {ModInt p(y);x = (x * p.x % mod);return *this;}
-    constexpr ModInt &operator*=(const int y) {ModInt p(y);x = (x * p.x % mod);return *this;}
-    constexpr ModInt &operator^=(const ModInt &p) {x = (x ^ p.x) % mod;return *this;}
-    constexpr ModInt &operator^=(const long long y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
-    constexpr ModInt &operator^=(const int y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
-    constexpr ModInt &operator/=(const ModInt &p) {*this *= p.inv();return *this;}
-    constexpr ModInt &operator/=(const long long y) {ModInt p(y);*this *= p.inv();return *this;}
-    constexpr ModInt &operator/=(const int y) {ModInt p(y);*this *= p.inv();return *this;}
-    constexpr ModInt operator=(const int y) {ModInt p(y);*this = p;return *this;}
-    constexpr ModInt operator=(const long long y) {ModInt p(y);*this = p;return *this;}
-    constexpr ModInt operator-() const {return ModInt(-x); }
-    constexpr ModInt operator++() {x++;if(x>=mod) x-=mod;return *this;}
-    constexpr ModInt operator--() {x--;if(x<0) x+=mod;return *this;}
-    constexpr ModInt operator+(const ModInt &p) const { return ModInt(*this) += p; }
-    constexpr ModInt operator-(const ModInt &p) const { return ModInt(*this) -= p; }
-    constexpr ModInt operator*(const ModInt &p) const { return ModInt(*this) *= p; }
-    constexpr ModInt operator/(const ModInt &p) const { return ModInt(*this) /= p; }
-    constexpr ModInt operator^(const ModInt &p) const { return ModInt(*this) ^= p; }
-    constexpr bool operator==(const ModInt &p) const { return x == p.x; }
-    constexpr bool operator!=(const ModInt &p) const { return x != p.x; }
-    // ModInt inv() const {int a=x,b=mod,u=1,v=0,t;while(b > 0) {t = a / b;swap(a -= t * b, b);swap(u -= t * v, v);} return ModInt(u);}
-    constexpr ModInt inv() const {int a=x,b=mod,u=1,v=0,t=0,tmp=0;while(b > 0) {t = a / b;a-=t*b;tmp=a;a=b;b=tmp;u-=t*v;tmp=u;u=v;v=tmp;} return ModInt(u);}
-    constexpr ModInt pow(long long n) const {ModInt ret(1), mul(x);for(;n > 0;mul *= mul,n >>= 1) if(n & 1) ret *= mul;return ret;}
-    friend ostream &operator<<(ostream &os, const ModInt &p) {return os << p.x;}
-    friend istream &operator>>(istream &is, ModInt &a) {long long t;is >> t;a = ModInt<mod>(t);return (is);}
-};
-constexpr long long MOD_998244353 = 998244353;
-constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
-
-/*
- * @title MonoidRangeFoldSumRangeOperateAffine - fold:区間和, operate:区間アフィン変換
- * @docs md/operator/monoid-lazy/MonoidRangeSumRangeAffine.md
- */
-template<class T, class U> struct MonoidRangeFoldSumRangeOperateAffine {
-	using TypeNode = T;
-	using TypeLazy = U;
-	inline static constexpr TypeNode unit_node = 0;
-	inline static constexpr TypeLazy unit_lazy = {1,0};
-	inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
-	inline static constexpr TypeLazy func_lazy(TypeLazy old_lazy,TypeLazy new_lazy){return {new_lazy.first*old_lazy.first,new_lazy.first*old_lazy.second+new_lazy.second};}
-	inline static constexpr TypeNode func_operate(TypeNode node,TypeLazy lazy,int l, int r){return {node*lazy.first+lazy.second*(r-l)};}
-	inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var <= nodeVal;}
-};
-using modint = ModInt<MOD_998244353>;
-
 int main(){
     cin.tie(0);ios::sync_with_stdio(false);
     int N,Q; read(N); read(Q);
-    LazySplayTreeSequence<MonoidRangeFoldSumRangeOperateAffine<modint,pair<modint,modint>>> st;
+    LazySplayTreeSequence<MonoidRangeFoldSumRangeOperateAdd<long long,long long>> st;
     for(int i=0;i<N;++i) {
         int a; read(a); st.insert(i,a);
     }
     while(Q--) {
         int q; read(q);
+        int l,r; read(l); read(r);
         if(q==0) {
-            int i,x; read(i); read(x);
-            st.insert(i,x);
+            st.reverse(l,r);
         }
         if(q==1) {
-            int i; read(i);
-            st.erase(i);
-        }
-		if(q==2) {
-			int l,r; read(l); read(r);
-			st.reverse(l,r);
-		}
-		if(q==3) {
-			int l,r,b,c; read(l); read(r); read(b); read(c);
-			st.operate(l,r,{b,c});
-		}
-        if(q==4) {
-            int l,r; read(l); read(r);
             cout << st.fold(l,r) << "\n";
         }
     }
