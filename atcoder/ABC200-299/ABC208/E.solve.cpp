@@ -4,10 +4,65 @@ using int128 = __int128_t;
 using int64 = long long;
 
 #define ALL(obj) (obj).begin(),(obj).end()
+
+/*
+ * @title FastIO
+ * @docs md/util/FastIO.md
+ */
+class FastIO{
+private:
+    inline static constexpr int ch_0='0';
+    inline static constexpr int ch_9='9';
+    inline static constexpr int ch_n='-';
+    inline static constexpr int ch_s=' ';
+    inline static constexpr int ch_l='\n';
+    inline static void endline_skip(char& ch) {
+        while(ch==ch_l) ch=getchar();
+    }
+    template<typename T> inline static void read_integer(T &x) {
+        int neg=0; char ch; x=0;
+        ch=getchar();
+        endline_skip(ch);
+        if(ch==ch_n) neg=1,ch=getchar();
+        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
+        if(neg) x*=-1;
+    }
+    template<typename T> inline static void read_unsigned_integer(T &x) {
+        char ch; x=0;
+        ch=getchar();
+        endline_skip(ch);
+        for(;(ch_0 <= ch && ch <= ch_9); ch = getchar()) x = x*10 + (ch-ch_0);
+    }
+    inline static void read_string(string &x) {
+        char ch; x="";
+        ch=getchar();
+        endline_skip(ch);
+        for(;(ch != ch_s && ch!=ch_l); ch = getchar()) x.push_back(ch);
+    }
+    inline static char ar[40];
+    inline static char *ch_ar;
+    template<typename T> inline static void write_integer(T x) {
+        ch_ar=ar;
+        if(x< 0) putchar(ch_n), x=-x;
+        if(x==0) putchar(ch_0);
+        for(;x;x/=10) *ch_ar++=(ch_0+x%10);
+        while(ch_ar--!=ar) putchar(*ch_ar);
+    }
+public:
+    inline static void read(int &x) {read_integer<int>(x);}
+    inline static void read(long long &x) {read_integer<long long>(x);}
+    inline static void read(unsigned int &x) {read_unsigned_integer<unsigned int>(x);}
+    inline static void read(unsigned long long &x) {read_unsigned_integer<unsigned long long>(x);}
+    inline static void read(string &x) {read_string(x);}
+    inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
+    inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
+    inline static void write(char x) {putchar(x);}
+};
+#define read(arg) FastIO::read(arg)
+#define write(arg) FastIO::write(arg)
+
 template<class T> using priority_queue_reverse = priority_queue<T,vector<T>,greater<T>>;
 
-constexpr int64 MOD = 1'000'000'000LL + 7; //'
-constexpr int64 MOD2 = 998244353;
 constexpr int64 HIGHINF = 1'000'000'000'000'000'000LL;
 constexpr int64 LOWINF = 1'000'000'000'000'000LL; //'
 constexpr long double PI = 3.1415926535897932384626433L;
@@ -39,5 +94,70 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int64 N,K; read(N), read(K);
+    string S = "0"+to_string(N);
+    int64 M = S.size();
+    //i文字目までみて、N以下が確定してるかどうか、累積積 = 場合の数
+    auto dp = multivector(M,2,map<int64,int64>());
+    dp[0][0][1]=1;
+
+    for(int i=1;i<M;++i) {
+        int64 s = (S[i]-'0');
+        for(int64 j=1; j<= 9; ++j) {
+            if(s < j) {
+                for(auto& [mul,cnt]: dp[i-1][1]) {
+                    int64 k = min(mul*j,K+1);
+                    dp[i][1][k] += cnt;
+                }
+            }
+            if(s == j) {
+                for(auto& [mul,cnt]: dp[i-1][1]) {
+                    int64 k = min(mul*j,K+1);
+                    dp[i][1][k] += cnt;
+                }
+                for(auto& [mul,cnt]: dp[i-1][0]) {
+                    int64 k = min(mul*j,K+1);
+                    dp[i][0][k] += cnt;
+                }
+            }
+            if(s > j) {
+                for(auto& [mul,cnt]: dp[i-1][1]) {
+                    int64 k = min(mul*j,K+1);
+                    dp[i][1][k] += cnt;
+                }
+                for(auto& [mul,cnt]: dp[i-1][0]) {
+                    int64 k = min(mul*j,K+1);
+                    dp[i][1][k] += cnt;
+                }
+            }
+            if(2<=i) {
+                {
+                    int64 k = min(j,K+1);
+                    dp[i][1][k] += 1;
+                }
+            }
+        }
+        if(2<=i){
+            if(s == 0) {
+                for(auto& [mul,cnt]: dp[i-1][1]) {
+                    dp[i][1][0] += cnt;
+                }
+                for(auto& [mul,cnt]: dp[i-1][0]) {
+                    dp[i][0][0] += cnt;
+                }
+            }
+            if(s > 0) {
+                for(auto& [mul,cnt]: dp[i-1][1]) {
+                    dp[i][1][0] += cnt;
+                }
+                for(auto& [mul,cnt]: dp[i-1][0]) {
+                    dp[i][1][0] += cnt;
+                }
+            }
+        }
+    }
+    int64 ans = 0;
+    for(int i=0;i<2;++i) for(auto [k,cnt]: dp[M-1][i]) if(k <= K) ans += cnt;
+    cout << ans << endl;
     return 0;
 }

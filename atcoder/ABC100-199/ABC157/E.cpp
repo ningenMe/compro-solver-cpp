@@ -118,6 +118,7 @@ long long DigitSum(long long N, long long K) {
 }
 
 int main() {
+	cin.tie(0);ios::sync_with_stdio(false);
     int N; cin >> N;
     string S; cin >> S;
     SegmentTree<nodeUpdateRangeOr<ll>> seg(N);
@@ -139,7 +140,7 @@ int main() {
         else{
             int l,r; cin >> l >> r;
             l--;
-            cout << DigitSum(seg.get(l,r),2) << endl;
+            cout << DigitSum(seg.get(l,r),2) << "\n";
         }
     }
 
