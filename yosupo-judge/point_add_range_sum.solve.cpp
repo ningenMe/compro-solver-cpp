@@ -4,127 +4,101 @@
 using namespace std;
 
 /*
- * @title SegmentTree
+ * @title DynamicSegmentTree - 非再帰抽象化動的セグメント木
+ * @docs md/segment-tree/DynamicSegmentTree.md
  */
-template<class Operator> class SegmentTree {
-	using TypeNode = typename Operator::TypeNode; 
-	size_t length;
-	size_t num;
-	vector<TypeNode> node;
-	vector<pair<size_t,size_t>> range;
+template<class Monoid> class DynamicSegmentTree {
+    using TypeNode = typename Monoid::TypeNode;
+    using i64 = long long;
+
+    struct Node{
+        Node *left, *right;
+        TypeNode val;
+        Node():left(nullptr),right(nullptr),val(Monoid::unit_node) {}
+    };
+
+    TypeNode dfs(i64 l,i64 r,i64 nl,i64 nr,Node* node) {
+        if(l <= nl && nr <= r) return node->val;
+        if(nr <= l || r <= nl) return Monoid::unit_node;
+        TypeNode vl=Monoid::unit_node, vr=Monoid::unit_node;
+        i64 m = (nl+nr)>>1;
+        if(node->left)  vl = dfs(l,r,nl,m,node->left);
+        if(node->right) vr = dfs(l,r,m,nr,node->right);
+        return Monoid::func_fold(vl,vr);
+    }
+
+    i64 length;
+    Node *root;
 public:
 
-	//unitで初期化
-	SegmentTree(const size_t num): num(num) {
-		for (length = 1; length < num; length *= 2);
-		node.resize(2 * length, Operator::unit_node);
-		range.resize(2 * length);
-		for (int i = 0; i < length; ++i) range[i+length] = make_pair(i,i+1);
-		for (int i = length - 1; i >= 0; --i) range[i] = make_pair(range[(i<<1)+0].first,range[(i<<1)+1].second);
-	}
+    //unitで初期化
+    DynamicSegmentTree() : length(1) {
+        root = new Node();
+    }
 
-	//vectorで初期化
-	SegmentTree(const vector<TypeNode> & vec) : num(vec.size()) {
-		for (length = 1; length < vec.size(); length *= 2);
-		node.resize(2 * length, Operator::unit_node);
-		for (int i = 0; i < vec.size(); ++i) node[i + length] = vec[i];
-		for (int i = length - 1; i >= 0; --i) node[i] = Operator::func_node(node[(i<<1)+0],node[(i<<1)+1]);
-		range.resize(2 * length);
-		for (int i = 0; i < length; ++i) range[i+length] = make_pair(i,i+1);
-		for (int i = length - 1; i >= 0; --i) range[i] = make_pair(range[(i<<1)+0].first,range[(i<<1)+1].second);
-	}
- 
-	//同じinitで初期化
-	SegmentTree(const size_t num, const TypeNode init) : num(num) {
-		for (length = 1; length < num; length *= 2);
-		node.resize(2 * length, Operator::unit_node);
-		range.resize(2 * length);
-		for (int i = 0; i < length; ++i) node[i+length] = init;
-		for (int i = 0; i < length; ++i) range[i+length] = make_pair(i,i+1);
-		for (int i = length - 1; i >= 0; --i) range[i] = make_pair(range[(i<<1)+0].first,range[(i<<1)+1].second);
-	}
-	
-	//[idx,idx+1)
-	void update(size_t idx, const TypeNode var) {
-		if(idx < 0 || length <= idx) return;
-		idx += length;
-		node[idx] = Operator::func_merge(node[idx],var);
-		while(idx >>= 1) node[idx] = Operator::func_node(node[(idx<<1)+0],node[(idx<<1)+1]);
-	}
+    //[idx,idx+1)
+    void operate(i64 idx, const TypeNode var) {
+        if(idx < 0) return;
+        for (;length <= idx; length *= 2) {
+            Node *new_root = new Node();
+            TypeNode val = root->val;
+            new_root->left = root;
+            root = new_root;
+            root->val = val;
+        }
 
-	//[l,r)
-	TypeNode get(int l, int r) {
-		if (l < 0 || length <= l || r < 0 || length < r) return Operator::unit_node;
-		TypeNode vl = Operator::unit_node, vr = Operator::unit_node;
-		for(l += length, r += length; l < r; l >>=1, r >>=1) {
-			if(l&1) vl = Operator::func_node(vl,node[l++]);
-			if(r&1) vr = Operator::func_node(node[--r],vr);
-		}
-		return Operator::func_node(vl,vr);
-	}
+        Node *node = root;
+        node->val = Monoid::func_operate(node->val,var);
 
-	//return [0,length]
-	int prefix_binary_search(TypeNode var) {
-		if(!Operator::func_check(node[1],var)) return num;
-		TypeNode ret = Operator::unit_node;
-		size_t idx = 2;
-		for(; idx < 2*length; idx<<=1){
-			if(!Operator::func_check(Operator::func_node(ret,node[idx]),var)) {
-				ret = Operator::func_node(ret,node[idx]);
-				idx++;
-			}
-		}
-		return min((idx>>1) - length,num);
-	}
+        i64 l = 0, r = length, m;
+        while(r-l>1) {
+            m = (r+l)>>1;
+            if(idx<m) {
+                r = m;
+                if(!node->left) node->left=new Node();
+                node = node->left;
+            }
+            else {
+                l = m;
+                if(!node->right) node->right = new Node();
+                node = node->right;
+            }
+            node->val = Monoid::func_operate(node->val,var);
+        }
+    }
 
-	//range[l,r) return [l,r]
-	int binary_search(size_t l, size_t r, TypeNode var) {
-		if (l < 0 || length <= l || r < 0 || length < r) return -1;
-		TypeNode ret = Operator::unit_node;
-		size_t off = l;
-		for(size_t idx = l+length; idx < 2*length && off < r; ){
-			if(range[idx].second<=r && !Operator::func_check(Operator::func_node(ret,node[idx]),var)) {
-				ret = Operator::func_node(ret,node[idx]);
-				off = range[idx++].second;
-				if(!(idx&1)) idx >>= 1;			
-			}
-			else{
-				idx <<=1;
-			}
-		}
-		return off;
-	}
+    //[l,r)
+    TypeNode fold(i64 l, i64 r) {
+        if (l < 0 || length <= l || r < 0) return Monoid::unit_node;
+        return dfs(l,r,0,length,root);
+    }
 };
 
-//一点更新 区間最小
-template<class T> struct NodeMinPointUpdate {
-	using TypeNode = T;
-	inline static constexpr TypeNode unit_node = (1LL<<31)-1;
-	inline static constexpr TypeNode func_node(TypeNode l,TypeNode r){return min(l,r);}
-	inline static constexpr TypeNode func_merge(TypeNode l,TypeNode r){return r;}
-	inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var == nodeVal;}
-};
-
-template<class T> struct NodeSumPointAdd {
-	using TypeNode = T;
-	inline static constexpr TypeNode unit_node = 0;
-	inline static constexpr TypeNode func_node(TypeNode l,TypeNode r){return l+r;}
-	inline static constexpr TypeNode func_merge(TypeNode l,TypeNode r){return l+r;}
-	inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var == nodeVal;}
+/*
+ * @title MonoidRangeSumPointAdd - [区間和, 一点加算]
+ * @docs md/operator/monoid/MonoidRangeSumPointAdd.md
+ */
+template<class T> struct MonoidRangeSumPointAdd {
+    using TypeNode = T;
+    inline static constexpr TypeNode unit_node = 0;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+    inline static constexpr TypeNode func_operate(TypeNode l,TypeNode r){return l+r;}
+    inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var == nodeVal;}
 };
 
 int main(){
 	cin.tie(0);ios::sync_with_stdio(false);
     int N,Q; cin >> N >> Q;
-    vector<long long> A(N);
+	DynamicSegmentTree<MonoidRangeSumPointAdd<long long>> seg;
     for(int i = 0; i < N; ++i) {
-        cin >> A[i];
+		int a; cin >> a;
+		seg.operate(i,a);
     }
-    SegmentTree<NodeSumPointAdd<long long>> seg(A);
+    
     while(Q--){
         long long q,l,r; cin >> q >> l >> r;
-        if(q) cout << seg.get(l,r) << endl;
-        else seg.update(l,r);
+        if(q) cout << seg.fold(l,r) << "\n";
+        else seg.operate(l,r);
     }
 }
 
