@@ -94,10 +94,72 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N; read(N);
+    int sy,sx; read(sy),read(sx);
+    sy--,sx--;
+    int gy,gx; read(gy),read(gx);
+    gy--,gx--;
+    vector<string> vs(N);
+    for(int i=0;i<N;++i) read(vs[i]);
+    auto dp = multivector(N,N,2,LOWINF);
+    deque<tuple<int,int,int>> dq;
+    dq.emplace_back(sy,sx,0);
+    dp[sy][sx][0]=1;
+    dq.emplace_back(sy,sx,1);
+    dp[sy][sx][1]=1;
+
+    while(dq.size()) {
+        auto [y,x,d] = dq.front(); dq.pop_front();
+        int64 c = dp[y][x][d];
+        if(d==0) {
+            {
+                int a=y+1,b=x+1,e=d;
+                if(0<=a && a<N && 0<=b && b<N && vs[a][b]=='.' && dp[a][b][e]>c) {
+                    dq.emplace_front(a,b,e);
+                    dp[a][b][e]=c;
+                }
+            }
+            {
+                int a=y-1,b=x-1,e=d;
+                if(0<=a && a<N && 0<=b && b<N && vs[a][b]=='.' && dp[a][b][e]>c) {
+                    dq.emplace_front(a,b,e);
+                    dp[a][b][e]=c;
+                }
+            }
+            {
+                int a=y,b=x,e=d^1;
+                if(0<=a && a<N && 0<=b && b<N && vs[a][b]=='.' && dp[a][b][e]>c+1) {
+                    dq.emplace_back(a,b,e);
+                    dp[a][b][e]=c+1;
+                }
+            }
+        }
+        if(d==1) {
+            {
+                int a=y+1,b=x-1,e=d;
+                if(0<=a && a<N && 0<=b && b<N && vs[a][b]=='.' && dp[a][b][e]>c) {
+                    dq.emplace_front(a,b,e);
+                    dp[a][b][e]=c;
+                }
+            }
+            {
+                int a=y-1,b=x+1,e=d;
+                if(0<=a && a<N && 0<=b && b<N && vs[a][b]=='.' && dp[a][b][e]>c) {
+                    dq.emplace_front(a,b,e);
+                    dp[a][b][e]=c;
+                }
+            }
+            {
+                int a=y,b=x,e=d^1;
+                if(0<=a && a<N && 0<=b && b<N && vs[a][b]=='.' && dp[a][b][e]>c+1) {
+                    dq.emplace_back(a,b,e);
+                    dp[a][b][e]=c+1;
+                }
+            }
+        }
+    }
+    int64 ans = min(dp[gy][gx][0],dp[gy][gx][1]);
+    if(ans==LOWINF) ans=-1;
+    cout << ans << endl;
     return 0;
 }

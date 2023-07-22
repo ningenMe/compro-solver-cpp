@@ -94,10 +94,34 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    deque<pair<int64,int64>> dq;
+    int Q; read(Q);
+    while(Q--) {
+        int q; read(q);
+        if(q==1) {
+            int64 x,c;
+            read(x),read(c);
+            dq.emplace_back(x,c);
+        }
+        if(q==2) {
+            int64 d;
+            read(d);
+            int64 sum=0;
+            while(d>0) {
+                auto [x,c] = dq.front(); dq.pop_front();
+                if(d>=c) {
+                    d -= c;
+                    sum += x*c;
+                }
+                else {
+                    c -= d;
+                    sum += x*d;
+                    d = 0;
+                    dq.emplace_front(x,c);
+                }
+            }
+            cout << sum << "\n";
+        }
+    }
     return 0;
 }

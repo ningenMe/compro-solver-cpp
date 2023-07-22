@@ -94,10 +94,23 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N; read(N);
+    vector<string> VS(N),VT(N);
+    for(int i=0;i<N;++i) read(VS[i]),read(VT[i]);
+    map<string,int> mp;
+    for(int i=0;i<N;++i) {
+        mp[VS[i]]++;
+        mp[VT[i]]++;
+    }
+    int flg=1;
+    for(int i=0;i<N;++i) {
+        mp[VS[i]]--;
+        mp[VT[i]]--;
+        if(mp[VS[i]] > 0 && mp[VT[i]]>0) flg=0;
+        mp[VS[i]]++;
+        mp[VT[i]]++;
+    }
+    Yn(flg);
+
     return 0;
 }

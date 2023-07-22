@@ -89,6 +89,51 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
+ * @title UnionFindTree - Union Find Tree
+ * @docs md/union-find-tree/UnionFindTree.md
+ */
+class UnionFindTree {
+    vector<int> parent,maxi,mini;
+    inline int root(int n) {
+        return (parent[n]<0?n:parent[n] = root(parent[n]));
+    }
+public:
+    UnionFindTree(const int N = 1) : parent(N,-1),maxi(N),mini(N){
+        iota(maxi.begin(),maxi.end(),0);
+        iota(mini.begin(),mini.end(),0);
+    }
+    inline bool connected(const int n, const int m) {
+        return root(n) == root(m);
+    }
+    inline void merge(int n,int m) {
+        n = root(n);
+        m = root(m);
+        if (n == m) return;
+        if(parent[n]>parent[m]) swap(n, m);
+        parent[n] += parent[m];
+        parent[m] = n;
+        maxi[n] = std::max(maxi[n],maxi[m]);
+        mini[n] = std::min(mini[n],mini[m]);
+    }
+    inline int min(const int n) {
+        return mini[root(n)];
+    }
+    inline int max(const int n) {
+        return maxi[root(n)];
+    }
+    inline int size(const int n){
+        return (-parent[root(n)]);
+    }
+    inline int operator[](const int n) {
+        return root(n);
+    }
+    inline void print() {
+        for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
+        cout << endl;
+    }
+};
+
+/*
  * @title ModInt
  * @docs md/util/ModInt.md
  */
@@ -140,48 +185,33 @@ constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
 int main() {
     using Mint = ModInt<MOD_998244353>;
     cin.tie(0);ios::sync_with_stdio(false);
-    int64 H,W,K;
-    read(H),read(W),read(K);
-    int64 sy,sx,gy,gx;
-    read(sy),read(sx),read(gy),read(gx);
-    sy--,sx--,gy--,gx--;
-    // 0,1,2
-    // 3,4,5
-    // 6,7,8
-    vector<Mint> dp(9,0),tp(9,0);
-    vector<tuple<int64,int64,int64,int64>> vt(9);
-    vt[0] = {0,gy,0,gx};
-    vt[1] = {0,gy,gx,gx+1};
-    vt[2] = {0,gy,gx+1,W};
-    
-    vt[3] = {gy,gy+1,0,gx};
-    vt[4] = {gy,gy+1,gx,gx+1};
-    vt[5] = {gy,gy+1,gx+1,W};
-
-    vt[6] = {gy+1,H,0,gx};
-    vt[7] = {gy+1,H,gx,gx+1};
-    vt[8] = {gy+1,H,gx+1,W};
-
-    for(int i=0;i<9;++i) {
-        auto [ly,ry,lx,rx]=vt[i];
-        if(ly<=sy&&sy<ry&&lx<=sx&&sx<rx) dp[i]+=1;
+    int N; read(N);
+    UnionFindTree uf(N+N);
+    for(int i=0;i<N;++i) {
+        int p; read(p); p--;
+        uf.merge(i,N+p);
     }
-
-    while(K--) {
-        for(int i=0;i<9;++i) tp[i]=0;
-        for(int i=0;i<9;++i) {
-            auto [ly1,ry1,lx1,rx1]=vt[i];
-            for(int j=0;j<9;++j) {
-                auto [ly2,ry2,lx2,rx2]=vt[j];
-                int cnt=0;
-                if(ly1==ly2 && ry1==ry2) cnt += (rx1-lx1) - (i==j);
-                if(lx1==lx2 && rx1==rx2) cnt += (ry1-ly1) - (i==j);
-                tp[i] += dp[j]*cnt;
-            }
-        }
-        swap(tp,dp);
+    for(int i=0;i<N;++i) {
+        int p; read(p); p--;
+        uf.merge(i,N+p);
     }
-    cout << dp[4] << endl;
-
+    map<int,int> mp;
+    for(int i=0;i<N;++i) mp[uf[i]]=uf.size(i)/2;
+    auto dp = multivector(N,2,2,Mint(0));
+    dp[0][0][0]=1;
+    dp[0][1][1]=1;
+    for(int i=1;i<N;++i) {
+        dp[i][0][0] += dp[i-1][1][0];
+        dp[i][1][0] += dp[i-1][1][0]+dp[i-1][0][0];
+        dp[i][0][1] += dp[i-1][1][1];
+        dp[i][1][1] += dp[i-1][1][1]+dp[i-1][0][1];
+    }
+    vector<Mint> cnt(N,0);
+    for(int i=0;i<N;++i) {
+        cnt[i]=dp[i][1][0] + dp[i][1][1] + dp[i][0][1];
+    }
+    Mint ans=1;
+    for(auto [_,sz]: mp) ans*=cnt[sz-1];
+    cout << ans << endl;
     return 0;
 }

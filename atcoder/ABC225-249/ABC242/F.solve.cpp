@@ -88,16 +88,96 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title ModInt
+ * @docs md/util/ModInt.md
+ */
+template<long long mod> class ModInt {
+public:
+    long long x;
+    constexpr ModInt():x(0) {}
+    constexpr ModInt(long long y) : x(y>=0?(y%mod): (mod - (-y)%mod)%mod) {}
+    constexpr ModInt &operator+=(const ModInt &p) {if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator+=(const long long y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator+=(const int y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const ModInt &p) {if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const long long y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const int y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator*=(const ModInt &p) {x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator*=(const long long y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator*=(const int y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator^=(const ModInt &p) {x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator^=(const long long y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator^=(const int y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator/=(const ModInt &p) {*this *= p.inv();return *this;}
+    constexpr ModInt &operator/=(const long long y) {ModInt p(y);*this *= p.inv();return *this;}
+    constexpr ModInt &operator/=(const int y) {ModInt p(y);*this *= p.inv();return *this;}
+    constexpr ModInt operator=(const int y) {ModInt p(y);*this = p;return *this;}
+    constexpr ModInt operator=(const long long y) {ModInt p(y);*this = p;return *this;}
+    constexpr ModInt operator-() const {return ModInt(-x); }
+    constexpr ModInt operator++() {x++;if(x>=mod) x-=mod;return *this;}
+    constexpr ModInt operator--() {x--;if(x<0) x+=mod;return *this;}
+    constexpr ModInt operator+(const ModInt &p) const { return ModInt(*this) += p; }
+    constexpr ModInt operator-(const ModInt &p) const { return ModInt(*this) -= p; }
+    constexpr ModInt operator*(const ModInt &p) const { return ModInt(*this) *= p; }
+    constexpr ModInt operator/(const ModInt &p) const { return ModInt(*this) /= p; }
+    constexpr ModInt operator^(const ModInt &p) const { return ModInt(*this) ^= p; }
+    constexpr bool operator==(const ModInt &p) const { return x == p.x; }
+    constexpr bool operator!=(const ModInt &p) const { return x != p.x; }
+    // ModInt inv() const {int a=x,b=mod,u=1,v=0,t;while(b > 0) {t = a / b;swap(a -= t * b, b);swap(u -= t * v, v);} return ModInt(u);}
+    constexpr ModInt inv() const {int a=x,b=mod,u=1,v=0,t=0,tmp=0;while(b > 0) {t = a / b;a-=t*b;tmp=a;a=b;b=tmp;u-=t*v;tmp=u;u=v;v=tmp;} return ModInt(u);}
+    constexpr ModInt pow(long long n) const {ModInt ret(1), mul(x);for(;n > 0;mul *= mul,n >>= 1) if(n & 1) ret *= mul;return ret;}
+    friend ostream &operator<<(ostream &os, const ModInt &p) {return os << p.x;}
+    friend istream &operator>>(istream &is, ModInt &a) {long long t;is >> t;a = ModInt<mod>(t);return (is);}
+};
+constexpr long long MOD_998244353 = 998244353;
+constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
+
+using Mint = ModInt<MOD_998244353>;
+
+/*
+ * @title CombinationMod - mod上の二項係数・階乗
+ * @docs md/math/CombinationMod.md
+ */
+template<long long mod> class CombinationMod {
+    vector<long long> fac,finv,inv;
+public:
+    CombinationMod(int N) : fac(N + 1), finv(N + 1), inv(N + 1) {
+        fac[0] = fac[1] = finv[0] = finv[1] = inv[1] = 1;
+        for (int i = 2; i <= N; ++i) {
+            fac[i] = fac[i - 1] * i % mod;
+            inv[i] = mod - inv[mod%i] * (mod / i) % mod;
+            finv[i] = finv[i - 1] * inv[i] % mod;
+        }
+    }
+    inline long long binom(int n, int k) {
+        return ((n < 0 || k < 0 || n < k) ? 0 : fac[n] * (finv[k] * finv[n - k] % mod) % mod);
+    }
+    inline long long factorial(int n) {
+        return fac[n];
+    }
+};
+
+//verify https://atcoder.jp/contests/abc021/tasks/abc021_d
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N,M,B,W; read(N),read(M),read(B),read(W);
+    auto dp = multivector(N+1,M+1,Mint(0));
+    CombinationMod<MOD_998244353> cm(N*M+10);
+    Mint ans=0;
+    for(int i=1;i<=N;++i) {
+        for(int j=1;j<=M;++j) {
+            int s=i*j;
+            int t=(N-i)*(M-j);
+            if(s<B || t<W) continue;
+            ans+=cm.binom(N,i)*cm.binom(M,j)*cm.binom(s,B)*cm.binom(t,W);
+        }
+    }
+    cout << ans << endl;
     return 0;
 }

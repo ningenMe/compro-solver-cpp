@@ -88,16 +88,84 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+template<class T> class ZobristHash {
+public:
+    class Table {
+        class XorShift64{
+            unsigned long long s;
+        public:
+            XorShift64():s(17364570149295320492UL){}
+            unsigned long long rand() {
+                s = s ^ (s<<13);
+                s = s ^ (s>>7);
+                s = s ^ (s<<17);
+                return s;
+            }
+        };
+        XorShift64 xor_shift;
+        map<T, unsigned long long> table;
+    public:
+        Table():xor_shift(){}
+        void set(const T val) {
+            if(table.count(val)) return;
+            table[val] = xor_shift.rand();
+        }    
+        size_t count(const T val) const {
+            return table.count(val);
+        }
+        unsigned long long get(const T val) {
+            return table[val];
+        }
+    };
+    class Set {
+        Table& table;
+        unsigned long long hash;
+        set<unsigned long long> st;
+    public:        
+        Set(Table& table):table(table),hash(0){}
+        void insert(const T val) {
+            assert(table.count(val));
+            unsigned long long key = table.get(val);
+            if(st.count(key)) return;
+            st.insert(key);
+            hash ^= key;
+        }
+        void erase(const T val) {
+            assert(table.count(val));
+            unsigned long long key = table.get(val);
+            if(!st.count(key)) return;
+            st.erase(key);
+            hash ^= key;
+        }
+        unsigned long long get() {
+            return hash;
+        }
+    };
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N; read(N);
+    vector<int64> A(N),B(N);
+    for(int i=0;i<N;++i) read(A[i]);
+    for(int i=0;i<N;++i) read(B[i]);
+    ZobristHash<int64>::Table table;
+    for(int i=0;i<N;++i) table.set(A[i]);
+    for(int i=0;i<N;++i) table.set(B[i]);
+    ZobristHash<int64>::Set st_a(table),st_b(table);
+    vector<unsigned long long> C(N),D(N);
+    for(int i=0;i<N;++i) st_a.insert(A[i]), C[i]=st_a.get();
+    for(int i=0;i<N;++i) st_b.insert(B[i]), D[i]=st_b.get();
+
+    int Q; read(Q);
+    while(Q--) {
+        int x,y; read(x),read(y);
+        x--,y--;
+        cout << (C[x]==D[y]?"Yes":"No") << "\n";
+    }
     return 0;
 }

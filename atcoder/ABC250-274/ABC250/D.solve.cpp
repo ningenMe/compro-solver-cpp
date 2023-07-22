@@ -88,16 +88,43 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title Eratosthenes - エラトステネスの篩
+ * @docs md/math/Eratosthenes.md
+ */
+class Eratosthenes {
+    unsigned int sz;
+public:
+    vector<unsigned int> sieve;
+    vector<long long> prime;
+    Eratosthenes(unsigned int N):sz(N+1),sieve(N+1, 1) {
+        sieve[0]=sieve[1]=0;
+        for(int i=1; i <= N/i; ++i) if(sieve[i]) for(int j=2*i;j<=N;j+=i) sieve[j]=0;
+        for(int i=1; i <= N  ; ++i) if(sieve[i]) prime.push_back(i);
+    }
+    size_t size() const {
+        return sz;
+    }
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int M = 1000000;
+    Eratosthenes E(M);
+    int64 N; read(N);
+    auto s = E.sieve;
+    for(int i=1; i<=M; ++i) {
+        s[i]+=s[i-1];
+    }
+    int64 ans=0;
+    for(int64 p: E.prime) {
+        int64 k = min(N / (p*p*p), p-1);
+        ans+=s[k];
+    }
+    cout << ans << endl;
     return 0;
 }

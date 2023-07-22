@@ -94,10 +94,33 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N,M; read(N),read(M);
+    vector<int64> A(N),B(N),C(M),D(M);
+    for(int i=0;i<N;++i) read(A[i]);
+    for(int i=0;i<N;++i) read(B[i]);
+    for(int i=0;i<M;++i) read(C[i]);
+    for(int i=0;i<M;++i) read(D[i]);
+    priority_queue_reverse<tuple<int,int,int>> pq;
+    for(int i=0;i<N;++i) {
+        pq.emplace(A[i],B[i],0);
+    }
+    for(int i=0;i<M;++i) {
+        pq.emplace(C[i],D[i],1);
+    }
+    multiset<int64> st;
+    while(pq.size()) {
+        auto [h,w,q]=pq.top(); pq.pop();
+        if(q==0) {
+            st.insert(w);
+        }
+        else {
+            auto itr = st.upper_bound(w);
+            if(itr != st.begin()) {
+                itr--;
+                st.erase(itr);
+            }
+        }
+    }
+    Yn(st.empty());
     return 0;
 }

@@ -88,16 +88,42 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int N,T,M;
+
+int rec(int size, vector<int> idx, const vector<vector<int>>& edge) {
+    if(idx.empty()) {
+        return (size==T);
+    }
+    int M = idx.size();
+    int sum=0;
+    for(int i=0; i < (1<<M); ++i) {
+        //先頭は絶対使う
+        if(!((i>>0) & 1)) continue;
+        vector<int> a,b;
+        for(int j=0;j<M;++j) (((i>>j) & 1) ? a:b).push_back(idx[j]);
+        int flg=0;
+        for(int u: a) for(int v: a) flg |= edge[u][v];
+        if(flg) continue;
+        sum += rec(size+1,b,edge);
+    }
+    return sum;
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    read(N),read(T),read(M);
+    auto edge = multivector(N,N,0);
+    for(int i=0;i<M;++i) {
+        int u,v; read(u),read(v);
+        u--,v--;
+        edge[u][v]=edge[v][u]=1;
+    }
+    vector<int> idx(N);
+    iota(ALL(idx),0);
+    cout << rec(0, idx, edge) << endl;
     return 0;
 }

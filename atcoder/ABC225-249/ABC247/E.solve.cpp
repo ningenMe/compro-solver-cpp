@@ -88,16 +88,121 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title UnionFindTree - Union Find Tree
+ * @docs md/union-find-tree/UnionFindTree.md
+ */
+class UnionFindTree {
+    vector<int> parent,maxi,mini;
+    inline int root(int n) {
+        return (parent[n]<0?n:parent[n] = root(parent[n]));
+    }
+public:
+    UnionFindTree(const int N = 1) : parent(N,-1),maxi(N),mini(N){
+        iota(maxi.begin(),maxi.end(),0);
+        iota(mini.begin(),mini.end(),0);
+    }
+    inline bool connected(const int n, const int m) {
+        return root(n) == root(m);
+    }
+    inline void merge(int n,int m) {
+        n = root(n);
+        m = root(m);
+        if (n == m) return;
+        if(parent[n]>parent[m]) swap(n, m);
+        parent[n] += parent[m];
+        parent[m] = n;
+        maxi[n] = std::max(maxi[n],maxi[m]);
+        mini[n] = std::min(mini[n],mini[m]);
+    }
+    inline int min(const int n) {
+        return mini[root(n)];
+    }
+    inline int max(const int n) {
+        return maxi[root(n)];
+    }
+    inline int size(const int n){
+        return (-parent[root(n)]);
+    }
+    inline int operator[](const int n) {
+        return root(n);
+    }
+    inline void print() {
+        for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
+        cout << endl;
+    }
+};
+
+/*
+ * @title SparseTable
+ * @docs md/static-range-query/SparseTable.md
+ */
+template<class Operator> class SparseTable{
+public:
+    using TypeNode = typename Operator::TypeNode;
+    vector<TypeNode> node;
+    vector<size_t> idx;
+    size_t depth;
+    size_t length;
+
+    SparseTable(const vector<TypeNode>& vec) {
+        for(depth = 0;(1<<depth)<=vec.size();++depth);
+        length = (1<<depth);
+        node.resize(depth*length);
+        for(int i = 0; i < vec.size(); ++i) node[i] = vec[i];
+        for(int i = 1; i < depth; ++i) for(int j = 0; j + (1<<i) < (1<<depth); ++j) node[i*length+j] = Operator::func_fold(node[(i-1)*length+j],node[(i-1)*length+j + (1 << (i-1))]);
+        idx.resize(vec.size()+1);
+        for(int i = 2; i < vec.size()+1; ++i) idx[i] = idx[i>>1] + 1;
+    }
+
+    //[l,r)
+    TypeNode fold(const int l,const int r) {
+        size_t bit = idx[r-l];
+        return Operator::func_fold(node[bit*length+l],node[bit*length+r - (1<<bit)]);
+    }
+};
+
+template<class T> struct NodeMin {
+    using TypeNode = T;
+    inline static constexpr TypeNode unitNode = 1LL<<31;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return min(l,r);}
+};
+template<class T> struct NodeMax {
+    using TypeNode = T;
+    inline static constexpr TypeNode unitNode = 0;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return max(l,r);}
+};
+
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int64 N,X,Y; read(N),read(Y),read(X);
+    vector<int64> A(N);
+    for(int i=0;i<N;++i) read(A[i]);
+    SparseTable<NodeMin<int64>> stmi(A);
+    SparseTable<NodeMax<int64>> stma(A);
+    UnionFindTree uf(N);
+    for(int i=0;i+1<N;++i) {
+        if(X<=A[i]&&A[i]<=Y&&X<=A[i+1]&&A[i+1]<=Y) uf.merge(i,i+1);
+    }
+    int64 ans=0;
+    for(int i=0;i<N;++i) {
+        int l = i;
+        int r = uf.max(i) + 1;
+        if(stmi.fold(l,r) != X || stma.fold(l,r) != Y) continue;
+
+        int ok = r, ng = l, md;
+        while(ok-ng>1) {
+            md = (ok+ng)/2;
+            ( (stmi.fold(l,md) == X && stma.fold(l,md) == Y) ? ok : ng)=md;
+        }
+        ans+=r-ok+1;
+    }
+    cout << ans << endl;
+
     return 0;
 }

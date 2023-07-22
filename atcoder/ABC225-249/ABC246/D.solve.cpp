@@ -88,16 +88,26 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int64 f(int64 a,int64 b) {
+    return (a+b)*(a*a+b*b);
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int64 N; read(N);
+    int64 ans=HIGHINF*8;
+    for(int64 a=0;a<=1000000;++a) {
+        int64 ok=1000000,ng=-1,md;
+        while(ok-ng>1) {
+            md = (ok+ng)/2;
+            (f(a,md)>=N ? ok:ng)=md;
+        }
+        chmin(ans,f(a,ok));
+    }
+    cout << ans << endl;
     return 0;
 }

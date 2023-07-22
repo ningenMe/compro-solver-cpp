@@ -88,16 +88,79 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title UnionFindTree - Union Find Tree
+ * @docs md/union-find-tree/UnionFindTree.md
+ */
+class UnionFindTree {
+    vector<int> parent,maxi,mini;
+    inline int root(int n) {
+        return (parent[n]<0?n:parent[n] = root(parent[n]));
+    }
+public:
+    UnionFindTree(const int N = 1) : parent(N,-1),maxi(N),mini(N){
+        iota(maxi.begin(),maxi.end(),0);
+        iota(mini.begin(),mini.end(),0);
+    }
+    inline bool connected(const int n, const int m) {
+        return root(n) == root(m);
+    }
+    inline void merge(int n,int m) {
+        n = root(n);
+        m = root(m);
+        if (n == m) return;
+        if(parent[n]>parent[m]) swap(n, m);
+        parent[n] += parent[m];
+        parent[m] = n;
+        maxi[n] = std::max(maxi[n],maxi[m]);
+        mini[n] = std::min(mini[n],mini[m]);
+    }
+    inline int min(const int n) {
+        return mini[root(n)];
+    }
+    inline int max(const int n) {
+        return maxi[root(n)];
+    }
+    inline int size(const int n){
+        return (-parent[root(n)]);
+    }
+    inline int operator[](const int n) {
+        return root(n);
+    }
+    inline void print() {
+        for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
+        cout << endl;
+    }
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N,M; read(N),read(M);
+    vector<tuple<int64,int,int>> edge(M);
+    auto dist = multivector(N,N,LOWINF);
+    for(int i=0;i<N;++i) dist[i][i]=0;
+    for(int i=0;i<M;++i) {
+        int u,v,w; read(u),read(v),read(w);
+        u--,v--;
+        dist[u][v]=dist[v][u]=w;
+        edge[i]={w,u,v};
+    }
+    for(int k=0;k<N;++k) for(int i=0;i<N;++i) for(int j=0;j<N;++j) chmin(dist[i][j],dist[i][k]+dist[k][j]);
+
+    int ans=0;
+    for(auto [w,u,v]: edge) {
+        int flg=0;
+        for(int i=0;i<N;++i) {
+            if(i==u || i==v) continue;
+            if(dist[u][i]+dist[i][v] <= w) flg=1;
+        }
+        ans+=flg;
+    }
+    cout << ans << endl;    
+
     return 0;
 }

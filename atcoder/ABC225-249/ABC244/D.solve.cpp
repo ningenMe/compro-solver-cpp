@@ -71,11 +71,11 @@ template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,ini
 template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}
 template <class T> void corner(bool flg, T hoge) {if (flg) {cout << hoge << endl; exit(0);}}
 template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
+template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
+template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
-template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const deque<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
-template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
@@ -94,10 +94,33 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N=3;
+    vector<int> a(N),b(N);
+    for(int i=0;i<N;++i) {
+        char c; cin >> c;
+        a[i]=(c-'A');
+    }
+    for(int i=0;i<N;++i) {
+        char c; cin >> c;
+        b[i]=(c-'A');
+    }
+    using pa = pair<vector<int>,int>;
+    set<pa> dp;
+    stack<pa> st;
+    st.push({a,0});
+    dp.insert({a,0});
+    while(st.size()) {
+        auto [v,parity] = st.top(); st.pop();
+        parity ^= 1;
+        for(int i=0;i+1<N;++i) for(int j=i+1;j<N;++j) {
+            swap(v[i],v[j]);
+            if(!dp.count({v,parity})) {
+                st.push({v,parity});
+                dp.insert({v,parity});
+            }
+            swap(v[i],v[j]);
+        }
+    }
+    Yn(dp.count({b,0}));
     return 0;
 }

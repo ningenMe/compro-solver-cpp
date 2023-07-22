@@ -88,16 +88,57 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+vector<pair<int,int>> ans_dfs,ans_bfs;
+
+void dfs(int from, vector<int>& vst, const vector<vector<int>>& edge) {
+    for(int to: edge[from]) {
+        if(vst[to]) continue;
+        vst[to]=1;
+        ans_dfs.emplace_back(from+1,to+1);
+        dfs(to,vst,edge);   
+    }
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N,M;
+    read(N),read(M);
+
+    vector<vector<int>> edge(N);
+    for(int i=0;i<M;++i) {
+        int u,v; read(u),read(v);
+        u--,v--;
+        edge[u].push_back(v);
+        edge[v].push_back(u);
+    }
+
+    
+    {
+        vector<int> vst(N,0);
+        vst[0]=1;
+        dfs(0,vst,edge);
+    }
+    {
+        vector<int> vst(N,0);
+        queue<int> q;
+        vst[0]=1;
+        q.push(0);
+        while(q.size()) {
+            auto from=q.front(); q.pop();
+            for(int to: edge[from]) {
+                if(vst[to]) continue;
+                vst[to]=1;
+                q.push(to);
+                ans_bfs.emplace_back(from+1,to+1);
+            }
+        }
+    }
+    for(auto [x,y]: ans_dfs) cout << x << " " << y << "\n";
+    for(auto [x,y]: ans_bfs) cout << x << " " << y << "\n";
+
     return 0;
 }

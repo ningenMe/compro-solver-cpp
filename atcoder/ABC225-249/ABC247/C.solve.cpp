@@ -88,16 +88,31 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+vector<vector<int>> vv(17);
+
+vector<int> rec(int x) {
+    if(x==1) {
+        return {1};
+    }
+    if(!vv[x].empty()) {
+        return vv[x];
+    }
+    auto l = rec(x-1);
+    l.push_back(x);
+    auto r = rec(x-1);
+    for(int e: r) l.push_back(e);
+    return vv[x]=l;
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N; read(N);
+    auto v = rec(N);
+    int s=v.size();
+    for(int i=0;i<s;++i) cout << v[i] << " \n"[i==s-1];
     return 0;
 }

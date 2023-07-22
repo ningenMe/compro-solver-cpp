@@ -88,16 +88,133 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title DynamicSegmentTree - 非再帰抽象化動的セグメント木
+ * @docs md/segment-tree/DynamicSegmentTree.md
+ */
+template<class Monoid> class DynamicSegmentTree {
+    using TypeNode = typename Monoid::TypeNode;
+    using i64 = long long;
+
+    struct Node{
+        Node *left, *right;
+        TypeNode val;
+        Node():left(nullptr),right(nullptr),val(Monoid::unit_node) {}
+    };
+
+    TypeNode dfs(i64 l,i64 r,i64 nl,i64 nr,Node* node) {
+        if(l <= nl && nr <= r) return node->val;
+        if(nr <= l || r <= nl) return Monoid::unit_node;
+        TypeNode vl=Monoid::unit_node, vr=Monoid::unit_node;
+        i64 m = (nl+nr)>>1;
+        if(node->left)  vl = dfs(l,r,nl,m,node->left);
+        if(node->right) vr = dfs(l,r,m,nr,node->right);
+        return Monoid::func_fold(vl,vr);
+    }
+
+    i64 length;
+    Node *root;
+public:
+    //unitで初期化
+    DynamicSegmentTree() : length(1) {
+        root = new Node();
+    }
+    //[idx,idx+1)
+    void operate(i64 idx, const TypeNode val) {
+        if(idx < 0) return;
+        for (;length <= idx; length *= 2) {
+            Node *new_root = new Node();
+            TypeNode val = root->val;
+            new_root->left = root;
+            root = new_root;
+            root->val = val;
+        }
+        Node* node = root;
+        i64 l = 0, r = length, m;
+		stack<Node*> st;
+
+        while(r-l>1) {
+			st.push(node);
+            m = (r+l)>>1;
+            if(idx<m) {
+                r = m;
+                if(!node->left) node->left=new Node();
+                node = node->left;
+            }
+            else {
+                l = m;
+                if(!node->right) node->right = new Node();
+                node = node->right;
+            }
+        }
+        node->val = Monoid::func_operate(node->val,val);
+		while(st.size()) {
+			node = st.top(); st.pop();
+			TypeNode vl=Monoid::unit_node, vr=Monoid::unit_node;
+			if(node->left)  vl = node->left->val;
+			if(node->right) vr = node->right->val;
+			node->val = Monoid::func_fold(vl,vr);
+		}
+    }
+
+    //[l,r)
+    TypeNode fold(i64 l, i64 r) {
+        if (l < 0 || length <= l || r < 0) return Monoid::unit_node;
+        return dfs(l,r,0,length,root);
+    }
+};
+
+/*
+ * @title MonoidRangeSumPointAdd - [区間和, 一点加算]
+ * @docs md/operator/monoid/MonoidRangeSumPointAdd.md
+ */
+template<class T> struct MonoidRangeSumPointAdd {
+    using TypeNode = T;
+    inline static constexpr TypeNode unit_node = 0;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+    inline static constexpr TypeNode func_operate(TypeNode l,TypeNode r){return l+r;}
+    inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var == nodeVal;}
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    DynamicSegmentTree<MonoidRangeSumPointAdd<long long>> dp0,dp1;
+    //dp0: iから1に行くまでの経路。iは i=x^2のみ
+    //dp1: dp0[i]*((i+1)^2 - (i)^2)
+    dp0.operate(1,1);
+    dp1.operate(1,(4-1)*1);
+    set<int64> st;
+    st.insert(1);
+
+    int64 M = 100000;
+    //1, 4, 9, 16, 25
+    //1, 2, 2, 5, 
+    for(int64 x=2; x<=M; ++x) {
+        int64 x2 = x*x;
+        int64 z2 = (x+1)*(x+1);
+        auto itr = st.upper_bound(x);
+        itr--;
+        int64 y2 = *itr;
+        //y2 < x < x^2
+        int64 cnt = dp0.fold(y2,y2+1) * (x-y2+1) + dp1.fold(0,y2);
+        dp0.operate(x2,cnt);
+        dp1.operate(x2,(z2-x2)*cnt);
+        st.insert(x2);
+    }
+
+    int64 T; read(T);
+    while(T--) {
+        int64 x2; read(x2);
+        int64 x = sqrtl(x2);
+        auto itr = st.upper_bound(x);
+        itr--;
+        int64 y2 = *itr;
+        int64 cnt = dp0.fold(y2,y2+1) * (x-y2+1) + dp1.fold(0,y2);
+        cout << cnt << "\n";
+    }
     return 0;
 }

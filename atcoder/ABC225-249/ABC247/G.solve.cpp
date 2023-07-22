@@ -88,16 +88,124 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title PrimalDualMinCostFlow - 最短路反復の最小費用流
+ * @docs md/graph/PrimalDualMinCostFlow.md
+ */
+template<class TypeFlow, class TypeCost> class PrimalDualMinCostFlow {
+    using Pair = pair<TypeCost,size_t>;
+    struct Edge {
+        size_t to;
+        size_t rev;
+        TypeFlow cap;
+        TypeCost cost; 
+    };
+    vector<vector<Edge>> edge;
+    const size_t N;
+    const TypeCost inf_cost;
+    vector<TypeCost> min_cost;
+    vector<TypeCost> potential;
+    vector<size_t> prev_vertex,prev_edge;
+    TypeFlow max_flow=0;
+public:
+    PrimalDualMinCostFlow(const size_t N, const TypeCost inf_cost) 
+        : N(N), edge(N), min_cost(N), potential(N,0), prev_vertex(N,N), prev_edge(N,N), inf_cost(inf_cost) {}
+    // costは単位流量あたりのコスト
+    inline void make_edge(const size_t from, const size_t to, const TypeFlow cap, const TypeCost cost) {
+        assert(cost < inf_cost);
+        edge[from].push_back({ to, edge[to].size(), cap, cost });
+        edge[to].push_back({ from, edge[from].size() - 1, 0, -cost });
+        max_flow += cap;
+    }
+    pair<TypeFlow,TypeCost> min_cost_flow(const size_t s, const size_t g) {
+        return min_cost_flow(s,g,max_flow);
+    }
+    pair<TypeFlow,TypeCost> min_cost_flow(const size_t s, const size_t g, const TypeFlow limit_flow) {
+        assert(0 <= s && s < N && 0 <= g && g < N && s != g);
+        priority_queue<Pair,vector<Pair>,greater<Pair>> pq;
+        // potential.assign(N, 0);
+        // prev_edge.assign(N, N);
+        // prev_vertex.assign(N, N);
+
+        TypeCost sum_cost=0;
+        TypeFlow sum_flow=0;
+        while(sum_flow < limit_flow) {
+            min_cost.assign(N, inf_cost);
+            {
+                pq.emplace(0,s);
+                min_cost[s]=0;
+            }
+            while(pq.size()) {
+                auto [from_cost, from] = pq.top(); pq.pop();
+                if(min_cost[from] < from_cost) continue;
+
+                for(int i=0; i < edge[from].size(); ++i) {
+                    auto [to, rev, cap, cost] = edge[from][i];
+                    TypeCost to_cost = from_cost + cost + (potential[from] - potential[to]);
+                    if(cap > 0 && min_cost[to] > to_cost) {
+                        pq.emplace(to_cost, to);
+                        prev_vertex[to] = from;
+                        prev_edge[to] = i;
+                        min_cost[to] = to_cost;
+                    }
+                }
+            }
+            if(min_cost[g]==inf_cost) break;
+            for(size_t i=0; i<N; ++i) potential[i] += min_cost[i];
+
+            TypeFlow diff_flow = limit_flow - sum_flow;
+            for(size_t i=g; i!=s; i = prev_vertex[i]) {
+                diff_flow = min(diff_flow, edge[prev_vertex[i]][prev_edge[i]].cap);
+            }
+            sum_flow += diff_flow;
+            sum_cost += diff_flow * potential[g];
+            for(size_t i=g; i!=s; i = prev_vertex[i]) {
+                auto& [_to,rev,cap,_cost] = edge[prev_vertex[i]][prev_edge[i]];
+                auto& [_r_to,_r_rev,r_cap,_r_cost] = edge[i][rev];
+
+                cap -= diff_flow;
+                r_cap += diff_flow;
+            }
+        }
+        return {sum_flow, sum_cost};
+    }
+
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N; read(N);
+    int64 inf = LOWINF;
+    int M = 150;
+    PrimalDualMinCostFlow<int,int64> mcf(M*M+2, inf+1);
+    int S = M*M;
+    int G = S+1; 
+    for(int i=0;i<N;++i) {
+        int a,b;
+        read(a),read(b);
+        int64 c;
+        read(c);
+        a--,b--;
+        mcf.make_edge(a,M+b,1,inf-c);
+    }
+    for(int i=0;i<M;++i) mcf.make_edge(S,i,1,0);
+    for(int i=0;i<M;++i) mcf.make_edge(M+i,G,1,0);
+
+    vector<int64> ans;
+    int64 sum_cost=0;
+    for(int i=1;i<=N;++i) {
+        auto [flow,cost] = mcf.min_cost_flow(S,G,1);
+        if(flow<1) break;
+        sum_cost += cost;
+        ans.push_back(inf*i-sum_cost);
+    }
+    cout << ans.size() << "\n";
+    for(int64 e: ans) cout << e << "\n";
+
+
     return 0;
 }

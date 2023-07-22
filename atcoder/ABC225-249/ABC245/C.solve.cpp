@@ -94,10 +94,19 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int64 N,K; read(N),read(K);
+    auto A = multivector(N,2,0);
+    for(int i=0;i<N;++i) read(A[i][0]);
+    for(int i=0;i<N;++i) read(A[i][1]);
+    auto dp = multivector(N,2,0);
+    dp[0][0]=dp[0][1]=1;
+    for(int i=1;i<N;++i) {
+        for(int j=0;j<2;++j) {
+            for(int k=0;k<2;++k) {
+                dp[i][j] |= (dp[i-1][k] & (abs(A[i][j]-A[i-1][k])<=K));
+            }
+        }
+    }
+    Yn(dp[N-1][0] || dp[N-1][1]);
     return 0;
 }

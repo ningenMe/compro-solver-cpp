@@ -70,12 +70,12 @@ constexpr long double PI = 3.1415926535897932384626433L;
 template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,init);}
 template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}
 template <class T> void corner(bool flg, T hoge) {if (flg) {cout << hoge << endl; exit(0);}}
-template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
+template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
+template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const deque<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
-template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
@@ -324,29 +324,95 @@ public:
     inline static long long discrete_logarithm(long long a, long long b, long long mod, bool is_include_zero=1) {return baby_step_giant_step(a,b,mod,is_include_zero);}
 };
 
+class Rational {
+    long long numerator, denominator;
+public:
+    friend ostream &operator<<(ostream &os, const Rational &rhs) {return os << rhs.numerator << "/" << rhs.denominator;}
+    constexpr Rational(const long long num, const long long den):numerator(num),denominator(den){
+        if(den<0) denominator*=(-1),numerator*=(-1);
+        if(den==0) numerator=1,denominator=0;
+    }
+    constexpr Rational(const long long val):Rational(val,1){}
+    constexpr Rational(const int val):Rational((long long)val){}
+    constexpr Rational():Rational(0){}
+    inline static constexpr Rational inf() {
+        return Rational(1LL,0LL);
+    }
+    constexpr Rational &operator+=(const Rational &rhs) {
+        numerator=numerator*rhs.denominator+denominator*rhs.numerator; 
+        denominator*=rhs.denominator;
+        if(denominator==0) numerator=1;
+        return *this;
+    }
+    constexpr Rational &operator-=(const Rational &rhs) {
+        numerator=numerator*rhs.denominator-denominator*rhs.numerator; 
+        denominator*=rhs.denominator;
+        if(denominator==0) numerator=1;
+        return *this;
+    }
+    constexpr Rational &operator*=(const Rational &rhs) {
+        numerator*=rhs.numerator;
+        denominator*=rhs.denominator;
+        if(denominator==0) numerator=1;
+        return *this;
+    }
+    constexpr Rational &operator/=(const Rational &rhs) {*this *= rhs.inv();return *this;}
+    constexpr Rational operator-() const {return Rational(-numerator, denominator); }
+    constexpr Rational operator+(const Rational &rhs) const { return Rational(*this) += rhs; }
+    constexpr Rational operator-(const Rational &rhs) const { return Rational(*this) -= rhs; }
+    constexpr Rational operator*(const Rational &rhs) const { return Rational(*this) *= rhs; }
+    constexpr Rational operator/(const Rational &rhs) const { return Rational(*this) /= rhs; }
+    constexpr bool operator<(const Rational &rhs) const { return numerator*rhs.denominator < denominator*rhs.numerator; }
+    constexpr bool operator<=(const Rational &rhs) const { return numerator*rhs.denominator <= denominator*rhs.numerator; }
+    constexpr bool operator>(const Rational &rhs) const { return rhs < *this; }
+    constexpr bool operator>=(const Rational &rhs) const { return rhs <= *this; }
+    constexpr bool operator==(const Rational &rhs) const { return numerator*rhs.denominator == denominator*rhs.numerator; }
+    constexpr bool operator!=(const Rational &rhs) const { return !(*this == rhs); }
+    constexpr Rational inv() const {return (numerator==0?inf():Rational(denominator,numerator));}
+};
+
+class RationalLine {
+    pair<Rational,Rational> p;
+public:
+    constexpr RationalLine(const long long x1,const long long y1,const long long x2,const long long y2) {
+        Rational slope(y2-y1,x2-x1), intercept(y1*x2-x1*y2,x2-x1);
+        if(slope == Rational::inf()) intercept = x1;
+        p.first=slope;
+        p.second=intercept;
+    }
+    constexpr bool operator<(const RationalLine &rhs) const { return p < rhs.p; }
+    constexpr bool operator<=(const RationalLine &rhs) const { return p <= rhs.p; }
+    constexpr bool operator>(const RationalLine &rhs) const { return rhs.p < p; }
+    constexpr bool operator>=(const RationalLine &rhs) const { return rhs.p <= p; }
+    constexpr bool operator==(const RationalLine &rhs) const { return p == rhs.p; }
+    constexpr bool operator!=(const RationalLine &rhs) const { return p != rhs.p; }
+    friend ostream &operator<<(ostream &os, const RationalLine &rhs) {return os << "{" << rhs.p.first << "," << rhs.p.second << "}";}
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N; read(N);
-    vector<int> A(N);
-    for(int i=0;i<N;++i) read(A[i]);
-    vector<int> freq(200010,0);
-    for(int i=0;i<N;++i) freq[A[i]]++;
+    int N,K; read(N),read(K);
+    vector<int64> X(N),Y(N);
+    for(int i=0;i<N;++i) read(X[i]),read(Y[i]);
+    corner(K==1,"Infinity");
 
-    int64 ans=0;
+    map<RationalLine,int> mp;
     for(int i=0;i<N;++i) {
-        auto v = Prime::divisor(A[i]);
-        for(int a: v) {
-            int b = A[i]/a;
-            int64 cnt=1;
-            cnt *= freq[a];
-            cnt *= freq[b];
-            ans+=cnt;
+        for(int j=i+1;j<N;++j) {
+            if(i==j) continue;
+            auto r = RationalLine(X[i],Y[i],X[j],Y[j]);
+            mp[r]++;
         }
     }
+    int ans=0;
+    for(auto [_,cnt]: mp) {
+        if(cnt*2 >= K*(K-1)) ans++;
+    }
     cout << ans << endl;
+
     return 0;
 }

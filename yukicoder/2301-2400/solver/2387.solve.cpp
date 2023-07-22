@@ -94,10 +94,39 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int64 N,M,X;
+    read(N),read(M),read(X);
+    vector<vector<tuple<int,int64,int64>>> edge(N);
+    for(int i=0;i<M;++i) {
+        int u,v,a,b;
+        read(u),read(v),read(a),read(b);
+        u--,v--;
+        edge[u].emplace_back(v,a,b);
+        edge[v].emplace_back(u,a,b);
+    }
+    int64 ok=0,ng=LOWINF,md;
+    vector<int64> dp(N);
+
+    while(ng-ok>1) {
+        md = ok + (ng-ok)/2;
+        for(int i=0;i<N;++i) dp[i]=HIGHINF+10;
+        priority_queue_reverse<pair<int64,int>> pq;        
+        pq.emplace(0,0);
+        dp[0]=0;
+
+        while(pq.size()) {
+            auto [cost,from] = pq.top(); pq.pop();
+            if(dp[from]<cost) continue;
+            for(auto [to,w,b]: edge[from]) {
+                if(md<=b && dp[to]>cost+w) {
+                    pq.emplace(cost+w,to);
+                    dp[to]=cost+w;
+                }
+            }
+        }
+        (dp[N-1]<=X?ok:ng)=md;
+    }
+    if(ok==0) ok=-1;
+    cout << ok << endl;
     return 0;
 }

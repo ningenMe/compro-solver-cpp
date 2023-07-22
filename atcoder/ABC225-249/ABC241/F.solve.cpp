@@ -70,12 +70,12 @@ constexpr long double PI = 3.1415926535897932384626433L;
 template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,init);}
 template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}
 template <class T> void corner(bool flg, T hoge) {if (flg) {cout << hoge << endl; exit(0);}}
+template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
 template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const deque<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
-template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
@@ -94,5 +94,66 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int H,W; read(H), read(W);
+    int N; read(N);
+    int sy,sx;
+    read(sx), read(sy);
+    int gy,gx;
+    read(gx), read(gy);
+    vector<int> X(N),Y(N);
+    for(int i=0;i<N;++i) read(X[i]), read(Y[i]);
+    map<int, set<int>> mst_y_x, mst_x_y;
+    for(int i=0;i<N;++i) mst_y_x[Y[i]].insert(X[i]), mst_x_y[X[i]].insert(Y[i]);
+
+    queue<pair<int,int>> q;
+    map<pair<int,int>,int> mp;
+
+    q.emplace(sy,sx);
+    mp[{sy,sx}]=1;
+
+    while(q.size()) {
+        auto [y,x] = q.front(); q.pop();
+        int c = mp[{y,x}];
+        //x -> 
+        auto itr_x = mst_y_x[y].lower_bound(x);
+        if(itr_x != mst_y_x[y].end()) {
+            int64 a = y;
+            int64 b = (*itr_x) - 1;
+            if(!mp.count({a,b})) {
+                q.emplace(a,b);
+                mp[{a,b}] = c+1;
+            }
+        }
+        if(itr_x != mst_y_x[y].begin()) {
+            itr_x--;
+            int64 a = y;
+            int64 b = (*itr_x) + 1;
+            if(!mp.count({a,b})) {
+                q.emplace(a,b);
+                mp[{a,b}] = c+1;
+            }
+        }
+
+        auto itr_y = mst_x_y[x].lower_bound(y);
+        if(itr_y != mst_x_y[x].end()) {
+            int64 a = (*itr_y) - 1;
+            int64 b = x;
+            if(!mp.count({a,b})) {
+                q.emplace(a,b);
+                mp[{a,b}] = c+1;
+            }
+        }
+        if(itr_y != mst_x_y[x].begin()) {
+            itr_y--;
+            int64 a = (*itr_y) + 1;
+            int64 b = x;
+            if(!mp.count({a,b})) {
+                q.emplace(a,b);
+                mp[{a,b}] = c+1;
+            }
+        }
+    }
+    int ans=mp[{gy,gx}]-1;
+    cout << ans << endl;
     return 0;
 }

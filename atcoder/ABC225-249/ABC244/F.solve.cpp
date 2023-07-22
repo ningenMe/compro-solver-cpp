@@ -94,10 +94,34 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N,M;
+    read(N),read(M);
+    vector<vector<int>> edge(N);
+    for(int i=0;i<M;++i) {
+        int u,v;read(u),read(v);
+        u--,v--;
+        edge[u].push_back(v);
+        edge[v].push_back(u);
+    }
+    auto dp = multivector(1<<N,N,LOWINF);
+    for(int i=0;i<N;++i) dp[0][0]=0;
+    priority_queue_reverse<tuple<int64,int,int>> pq;
+    for(int i=0;i<N;++i) {
+        dp[1<<i][i]=1;
+        pq.emplace(1,1<<i,i);
+    }
+    while(pq.size()) {
+        auto [cost,bit,from] = pq.top(); pq.pop();
+        if(dp[bit][from]<cost) continue;
+        for(int to: edge[from]) {
+            if(dp[bit^(1<<to)][to] > cost+1) {
+                dp[bit^(1<<to)][to] = cost+1;
+                pq.emplace(cost+1,bit^(1<<to),to);
+            }
+        }
+    }
+    int64 ans=0;
+    for(int i=0;i<(1<<N);++i) ans += *min_element(ALL(dp[i]));
+    cout << ans << endl;
     return 0;
 }

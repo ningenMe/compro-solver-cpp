@@ -94,10 +94,14 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int W; read(W);
+    vector<int> A;
+    for(int i=1;i<100;++i) A.push_back(i);
+    for(int i=1;i<100;++i) A.push_back(i*100);
+    for(int i=1;i<100;++i) A.push_back(i*10000);
+    A.push_back(1000000);
+    int M=A.size();
+    cout << M << endl;
+    for(int i=0;i<M;++i) cout << A[i] << " \n"[i==M-1];
     return 0;
 }

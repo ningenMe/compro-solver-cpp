@@ -237,46 +237,17 @@ public:
     }
 };
 
+/**
+ * @url 
+ * @est
+ */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
     int N; read(N);
-    vector<int> A(N);
+    vector<int64> A(N);
     for(int i=0;i<N;++i) read(A[i]);
-
-    vector<vector<int>> idx(N+2);
-    for(int i=1;i<=N+1;++i) idx[i].push_back(-1);
-    for(int i=0;i<N;++i) idx[A[i]].push_back(i);
-    for(int i=1;i<=N+1;++i) idx[i].push_back(N);
-
-    vector<pair<int,int>> ranges;
-    for(int i=1;i<=N;++i) {
-        for(int j:idx[i]) {
-            if(j<0||N<=j) continue;
-            auto itr = lower_bound(ALL(idx[i+1]),j);
-            int r = (*itr); --itr;
-            int l = (*itr) + 1;
-            ranges.emplace_back(l,r);
-        }
-    }
-    StaticRangeMexQuery<int> srmq(A,ranges,1);
-
-    set<int> st;
-    for(int i=1;i<=N;++i) {
-        for(int j:idx[i]) {
-            if(j<0||N<=j) continue;
-            auto itr = lower_bound(ALL(idx[i+1]),j);
-            int r = (*itr); --itr;
-            int l = (*itr) + 1;
-            int m = srmq.fold(l,r);
-            st.insert(m);
-        }
-    }
-
-    for(int i=0;i<N;++i) if(A[i]>1) st.insert(1);
-    int ans = -1;
-    for(int i=1;i<=2*N && ans == -1;++i) {
-        if(!st.count(i)) ans = i;
-    }
-    cout << ans << endl;
+    vector<pair<int,int>> query = {{0,N}};
+    StaticRangeMexQuery<int64> srmq(A,query);
+    cout << srmq.fold(0,N) << endl;
     return 0;
 }

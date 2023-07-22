@@ -94,5 +94,30 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
+    int64 N,K; read(N),read(K);
+    vector<int64> A(N);
+    for(int i=0;i<N;++i) read(A[i]);
+
+    int M = 50;
+    auto dp_val = multivector(M, N, -1LL);
+    {
+        for(int j=0;j<N;++j) dp_val[0][j] = A[j];
+    }
+    for(int i=1;i<M;++i) {
+        for(int j=0;j<N;++j) {
+            int64 val_k = dp_val[i-1][j];
+            int64 val_l = dp_val[i-1][ (j + val_k) % N ];
+            dp_val[i][j] = val_k + val_l;
+        }
+    }
+    int64 k = 0;
+    int64 ans=0;
+    for(int i=0;i<M;++i) {
+        if(!( (K>>i)&1 ) ) continue;
+        ans += dp_val[i][k];
+        (k += dp_val[i][k]) %= N;
+    }
+    cout << ans << endl;
+
     return 0;
 }

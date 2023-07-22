@@ -88,16 +88,85 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title RuntimeModInt - 実行時ModInt
+ * @docs md/util/RuntimeModInt.md
+ */
+template<long long& mod> class RuntimeModInt {
+public:
+    long long x;
+    constexpr RuntimeModInt():x(0) {}
+    constexpr RuntimeModInt(long long y) : x(y>=0?(y%mod): (mod - (-y)%mod)%mod) {}
+    RuntimeModInt &operator+=(const RuntimeModInt &p) {if((x += p.x) >= mod) x -= mod;return *this;}
+    RuntimeModInt &operator+=(const long long y) {RuntimeModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    RuntimeModInt &operator+=(const int y) {RuntimeModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    RuntimeModInt &operator-=(const RuntimeModInt &p) {if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    RuntimeModInt &operator-=(const long long y) {RuntimeModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    RuntimeModInt &operator-=(const int y) {RuntimeModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    RuntimeModInt &operator*=(const RuntimeModInt &p) {x = (x * p.x % mod);return *this;}
+    RuntimeModInt &operator*=(const long long y) {RuntimeModInt p(y);x = (x * p.x % mod);return *this;}
+    RuntimeModInt &operator*=(const int y) {RuntimeModInt p(y);x = (x * p.x % mod);return *this;}
+    RuntimeModInt &operator^=(const RuntimeModInt &p) {x = (x ^ p.x) % mod;return *this;}
+    RuntimeModInt &operator^=(const long long y) {RuntimeModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    RuntimeModInt &operator^=(const int y) {RuntimeModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    RuntimeModInt &operator/=(const RuntimeModInt &p) {*this *= p.inv();return *this;}
+    RuntimeModInt &operator/=(const long long y) {RuntimeModInt p(y);*this *= p.inv();return *this;}
+    RuntimeModInt &operator/=(const int y) {RuntimeModInt p(y);*this *= p.inv();return *this;}
+    RuntimeModInt operator=(const int y) {RuntimeModInt p(y);*this = p;return *this;}
+    RuntimeModInt operator=(const long long y) {RuntimeModInt p(y);*this = p;return *this;}
+    RuntimeModInt operator-() const {return RuntimeModInt(-x); }
+    RuntimeModInt operator++() {x++;if(x>=mod) x-=mod;return *this;}
+    RuntimeModInt operator--() {x--;if(x<0) x+=mod;return *this;}
+    RuntimeModInt operator+(const RuntimeModInt &p) const { return RuntimeModInt(*this) += p; }
+    RuntimeModInt operator-(const RuntimeModInt &p) const { return RuntimeModInt(*this) -= p; }
+    RuntimeModInt operator*(const RuntimeModInt &p) const { return RuntimeModInt(*this) *= p; }
+    RuntimeModInt operator/(const RuntimeModInt &p) const { return RuntimeModInt(*this) /= p; }
+    RuntimeModInt operator^(const RuntimeModInt &p) const { return RuntimeModInt(*this) ^= p; }
+    bool operator==(const RuntimeModInt &p) const { return x == p.x; }
+    bool operator!=(const RuntimeModInt &p) const { return x != p.x; }
+    RuntimeModInt inv() const {int a=x,b=mod,u=1,v=0,t;while(b > 0) {t = a / b;swap(a -= t * b, b);swap(u -= t * v, v);} return RuntimeModInt(u);}
+    RuntimeModInt pow(long long n) const {RuntimeModInt ret(1), mul(x);for(;n > 0;mul *= mul,n >>= 1) if(n & 1) ret *= mul;return ret;}
+    friend ostream &operator<<(ostream &os, const RuntimeModInt &p) {return os << p.x;}
+    friend istream &operator>>(istream &is, RuntimeModInt &a) {long long t;is >> t;a = RuntimeModInt<mod>(t);return (is);}
+};
+long long runtime_mod;
+using Mint = RuntimeModInt<runtime_mod>;
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    // [x^M] (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B) * (1 + a^1x^1 + a^2x^2 + ... + a^Bx^B)
-    // f_0 = 1 + a^1x^1 + a^2x^2 + ... + a^Bx^B
-    //     = 1/(1 - (ax)) - a^(B+1)x^(B+1) / (1- (ax))
-    //     = (1 - a^(B+1)x^(B+1)) / (1 - (ax))
-    // 疎なfpsの boston moriをかけば行けそう？
+    int N,P; read(N),read(P);
+    runtime_mod = P;
+    auto dp = multivector(2,N,Mint(0));
+    auto tp = dp;
+    dp[0][0]=1;
+    dp[1][1]=1;
+    for(int i=1;i<N;++i) {
+        for(int j=0;j<N;++j) tp[0][j]=tp[1][j]=0;
+        for(int j=0;j<N;++j) {
+            // ○-○
+            //   |
+            // ○-○
+            if(j  <N) tp[0][j]+=dp[0][j]+dp[1][j];
+            // ○-○    ○ ○     ○-○
+            //     or   |  or   |
+            // ○-○    ○-○     ○ ○
+            if(j+1<N) tp[0][j+1]+=dp[0][j]*3;
+            // ○-○    ○ ○
+            //     or     
+            // ○ ○    ○-○
+            if(j+2<N) tp[1][j+2]+=dp[0][j]*2;
+            // ○-○  
+            //     
+            // ○-○ 
+            if(j+1<N) tp[1][j+1]+=dp[1][j];
+        }
+        swap(dp,tp);
+    }
+    for(int i=1;i<N;++i) cout << dp[0][i] << " \n"[i==N-1];
+
     return 0;
 }
