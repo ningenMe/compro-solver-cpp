@@ -40,8 +40,16 @@ jobs:
         rm -f compro-solver-cpp/.vscode/*.code-snippets
         cp compro-library/snippet/tmp/* compro-solver-cpp/.vscode
       shell: bash
-    - id: git
-      name: git
+    - id: git-diff
+      name: git diff
+      run: |
+        cd ./compro-solver-cpp
+        DIFF=`git diff --name-only | wc -l`
+        echo "diff=$DIFF" >> $GITHUB_OUTPUT
+      shell: bash
+    - id: git-push
+      name: git push
+      if: steps.git-diff.outputs.git-diff > 0
       run: |
         cd ./compro-solver-cpp
         git status        
