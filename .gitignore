@@ -1,4 +1,5 @@
-*.vscode
+.vscode/*
+!.vscode/*.code-snippets
 *.exe
 *.solve
 tempCodeRunnerFile.cpp
