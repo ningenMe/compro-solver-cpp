@@ -88,40 +88,78 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title ModInt
+ * @docs md/util/ModInt.md
+ */
+template<long long mod> class ModInt {
+public:
+    long long x;
+    constexpr ModInt():x(0) {}
+    constexpr ModInt(long long y) : x(y>=0?(y%mod): (mod - (-y)%mod)%mod) {}
+    constexpr ModInt &operator+=(const ModInt &p) {if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator+=(const long long y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator+=(const int y) {ModInt p(y);if((x += p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const ModInt &p) {if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const long long y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator-=(const int y) {ModInt p(y);if((x += mod - p.x) >= mod) x -= mod;return *this;}
+    constexpr ModInt &operator*=(const ModInt &p) {x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator*=(const long long y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator*=(const int y) {ModInt p(y);x = (x * p.x % mod);return *this;}
+    constexpr ModInt &operator^=(const ModInt &p) {x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator^=(const long long y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator^=(const int y) {ModInt p(y);x = (x ^ p.x) % mod;return *this;}
+    constexpr ModInt &operator/=(const ModInt &p) {*this *= p.inv();return *this;}
+    constexpr ModInt &operator/=(const long long y) {ModInt p(y);*this *= p.inv();return *this;}
+    constexpr ModInt &operator/=(const int y) {ModInt p(y);*this *= p.inv();return *this;}
+    constexpr ModInt operator=(const int y) {ModInt p(y);*this = p;return *this;}
+    constexpr ModInt operator=(const long long y) {ModInt p(y);*this = p;return *this;}
+    constexpr ModInt operator-() const {return ModInt(-x); }
+    constexpr ModInt operator++() {x++;if(x>=mod) x-=mod;return *this;}
+    constexpr ModInt operator--() {x--;if(x<0) x+=mod;return *this;}
+    constexpr ModInt operator+(const ModInt &p) const { return ModInt(*this) += p; }
+    constexpr ModInt operator-(const ModInt &p) const { return ModInt(*this) -= p; }
+    constexpr ModInt operator*(const ModInt &p) const { return ModInt(*this) *= p; }
+    constexpr ModInt operator/(const ModInt &p) const { return ModInt(*this) /= p; }
+    constexpr ModInt operator^(const ModInt &p) const { return ModInt(*this) ^= p; }
+    constexpr bool operator==(const ModInt &p) const { return x == p.x; }
+    constexpr bool operator!=(const ModInt &p) const { return x != p.x; }
+    // ModInt inv() const {int a=x,b=mod,u=1,v=0,t;while(b > 0) {t = a / b;swap(a -= t * b, b);swap(u -= t * v, v);} return ModInt(u);}
+    constexpr ModInt inv() const {int a=x,b=mod,u=1,v=0,t=0,tmp=0;while(b > 0) {t = a / b;a-=t*b;tmp=a;a=b;b=tmp;u-=t*v;tmp=u;u=v;v=tmp;} return ModInt(u);}
+    constexpr ModInt pow(long long n) const {ModInt ret(1), mul(x);for(;n > 0;mul *= mul,n >>= 1) if(n & 1) ret *= mul;return ret;}
+    friend ostream &operator<<(ostream &os, const ModInt &p) {return os << p.x;}
+    friend istream &operator>>(istream &is, ModInt &a) {long long t;is >> t;a = ModInt<mod>(t);return (is);}
+};
+constexpr long long MOD_998244353 = 998244353;
+constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
+
+using Mint = ModInt<MOD_998244353>;
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
-    }
+    int Q,K; read(Q),read(K);
+    int M = 10000;
+    vector<Mint> dp(M+1,0);
+    dp[0]=1;
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+    while(Q--) {
+        string c; int x;
+        read(c);
+        read(x);
+        if(c=="+") {
+            for(int j=M; 0 <= j; --j) {
+                if(j-x>=0) dp[j] += dp[j-x];
             }
         }
+        if(c=="-") {
+            for(int j=0; j <= M; ++j) {
+                if(j-x>=0) dp[j] -= dp[j-x];
+            }
+        }
+        cout << dp[K] << "\n";
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
     return 0;
 }

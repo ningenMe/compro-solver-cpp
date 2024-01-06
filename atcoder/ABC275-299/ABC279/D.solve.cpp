@@ -88,40 +88,32 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+long double f(int64 mg, long double a, long double b) {
+    long double g = mg;
+    return a / sqrtl(g) + b*(mg-1);
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int64 A,B; read(A),read(B);
+    long double a = A, b = B;
+    int64 l = 1, r = 1e18+10;
+    while(r-l>2) {
+        int64 ml = (l*2+r)/3;
+        int64 mr = (l+2*r)/3;
+        long double fl = f(ml,a,b);
+        long double fr = f(mr,a,b);
+        if(fr>fl) r = mr;
+        else l = ml;
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
+    long double ans = HIGHINF;
+    for(int64 g=l;g<=r;++g) {
+        chmin(ans,f(g,a,b));
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    printf("%.10Lf\n",ans);
     return 0;
 }

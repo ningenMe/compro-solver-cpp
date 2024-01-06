@@ -94,34 +94,61 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
-    }
+    int N,H; read(N),read(H);
+    vector<int> X(N+1,0);
+    for(int i=1;i<=N;++i) read(X[i]);
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    int inf = 1000000000;
+
+    vector<int> P(N+1,inf),F(N+1,0);
+    for(int i=1;i<N;++i) read(P[i]),read(F[i]);
+
+    auto dp = multivector(N+1,H+1,H+1,inf);
+    {
+        {
+            dp[0][H][0] = 0;
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    for(int i=0; i<N; ++i) {
+        int d = X[i+1]-X[i];
+        for(int j=0; j<=H; ++j) {
+            for(int k=0; k<=H; ++k) {
+                if(dp[i][j][k] >= inf) continue;
+                
+
+                //往路でも復路でも使わない
+                {
+                    int s = j-d;
+                    int t = k+d;
+                    if(0<=s && s<=H && 0 <= t && t <=H) chmin(dp[i+1][s][t], dp[i][j][k]);
+                }
+                //往路で使う
+                {
+                    int s = min(j+F[i],H)-d;
+                    int t = k+d;
+                    if(0<=s && s<=H && 0 <= t && t <=H) chmin(dp[i+1][s][t], dp[i][j][k] + P[i]);
+                }
+                //復路で使う
+                {
+                    int s = j-d;
+                    int t = max(k-F[i],0)+d;
+                    if(0<=s && s<=H && 0 <= t && t <=H) chmin(dp[i+1][s][t], dp[i][j][k] + P[i]);
+                }
+            }
+            // print(i,j,"d",d);
+            // print(dp[i][j]);
+        }
+        // print();
+    }
+    int ans = inf;
+    {
+        for(int j=0; j<=H; ++j) {
+            for(int k=0; k<=H; ++k) {
+                if(j>=k && dp[N][j][k] < inf) chmin(ans,dp[N][j][k]);
+            }
+        }        
+    }
+    if(ans >= inf) ans=-1;
+    cout << ans << endl;
     return 0;
 }

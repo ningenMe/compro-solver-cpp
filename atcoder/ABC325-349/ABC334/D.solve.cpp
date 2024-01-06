@@ -88,40 +88,81 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title DisjointSparseTable
+ * @docs md/static-range-query/DisjointSparseTable.md
+ */
+template<class Operator> class DisjointSparseTable{
+public:
+    using TypeNode = typename Operator::TypeNode;
+    size_t depth;
+    size_t length;
+    vector<TypeNode> node;
+    vector<size_t> msb;
+
+    DisjointSparseTable(const vector<TypeNode>& vec) {
+        for(depth = 0;(1<<depth)<=vec.size();++depth);
+        length = (1<<depth);
+
+        //msb
+        msb.resize(length,0);
+        for(int i = 0; i < length; ++i) for(int j = 0; j < depth; ++j) if(i>>j) msb[i] = j;
+
+        //init value
+        node.resize(depth*length,Operator::unit_node);
+        for(int i = 0; i < vec.size(); ++i) node[i] = vec[i];
+
+        for(int i = 1; i < depth; ++i) {
+            for(int r = (1<<i),l = r-1; r < length; r += (2<<i),l = r-1){
+                //init accumulate
+                node[i*length+l] = node[l];
+                node[i*length+r] = node[r];
+                //accumulate
+                for(int k = 1; k < (1<<i); ++k) {
+                    node[i*length+l-k] = Operator::func_fold(node[i*length+l-k+1],node[l-k]);
+                    node[i*length+r+k] = Operator::func_fold(node[i*length+r+k-1],node[r+k]);
+                }
+            }
+        }
+    }
+
+    //[l,r)
+    TypeNode fold(int l,int r) {
+        r--;
+        return (l>r||l<0||length<=r) ? Operator::unit_node: (l==r ? node[l] : Operator::func_fold(node[msb[l^r]*length+l],node[msb[l^r]*length+r]));
+    }
+};
+
+//sum
+template<class T> struct NodeSum {
+    using TypeNode = T;
+    inline static constexpr TypeNode unit_node = 0;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
-    }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+    int N,Q; read(N),read(Q);
+    vector<int64> R(N);
+    for(int i=0;i<N;++i) read(R[i]);
+    sort(ALL(R));
+    DisjointSparseTable<NodeSum<int64>> dst(R);
+    while(Q--) {
+        int64 X; read(X);
+        int64 ans=0;
+        if(X >= R[0]) {
+            int64 ok = 1, ng = N+1, md;
+            while(ng-ok>1) {
+                md = (ok+ng)/2;
+                (dst.fold(0,md)<=X?ok:ng)=md;
             }
+            ans=ok;
         }
+        cout << ans << "\n";
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
     return 0;
 }

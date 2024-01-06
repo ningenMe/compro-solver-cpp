@@ -94,34 +94,39 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int64 N,M; read(N),read(M);
+    vector<vector<int>> edge(N);
+    for(int i=0;i<M;++i) {
+        int u,v; read(u),read(v);
+        u--,v--;
+        edge[u].push_back(v);
+        edge[v].push_back(u);
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
+    vector<int> c(N,-1);
+    int64 ans=N*(N-1)/2 - M;
+    for(int i=0;i<N;++i) {
+        if(c[i]!=-1) continue;
+        vector<int64> cnt(2,0);
+        queue<int> q;
+        q.push(i);
+        c[i]=0;
+        cnt[c[i]]++;
+        while(q.size()) {
+            auto from = q.front(); q.pop();
+            for(auto to: edge[from]) {
+                if(c[to]==-1) {
+                    q.push(to);
+                    c[to]=!c[from];
+                    cnt[c[to]]++;
+                }
+                else {
+                    corner(c[to]==c[from], 0);
                 }
             }
         }
+        ans -= cnt[0]*(cnt[0]-1)/2;
+        ans -= cnt[1]*(cnt[1]-1)/2;
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    cout << ans << endl;
     return 0;
 }

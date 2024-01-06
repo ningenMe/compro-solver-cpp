@@ -94,34 +94,39 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int64 N,M;
+    read(N),read(M);
+    set<int64> st;
+    vector<int64> A(N,0);
+    for(int i=0;i<N;++i) st.insert(i);
+    map<int64,vector<int64>> mv;
+    map<int64,vector<pair<int64,int64>>> mws;
+    set<int64> tm;
+
+    for(int i=0;i<M;++i) {
+        int64 T,W,S; read(T),read(W),read(S);
+        tm.insert(T);
+        tm.insert(T+S);
+        mws[T].push_back({W,S});
     }
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+    for(auto t: tm) {
+        if(mv.count(t)) {
+            auto v = mv[t];
+            for(auto x: v) st.insert(x);
+        }
+        if(mws.count(t)) {
+            auto v = mws[t];
+            for(auto [w,s]: v) {
+                if(st.empty()) continue;
+                int j = *st.begin();
+                A[j] += w;
+
+                st.erase(j);
+                mv[t+s].push_back(j);
             }
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    for(int i=0;i<N;++i) cout << A[i] << "\n";
     return 0;
 }

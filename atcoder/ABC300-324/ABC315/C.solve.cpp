@@ -94,34 +94,29 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int N; read(N);
+    vector<int64> F(N),S(N);
+    map<int64,int64> mp;
+    map<int64,vector<int64>> mv;
+    for(int i=0;i<N;++i) {
+        read(F[i]); read(S[i]);
+        chmax(mp[F[i]],S[i]);
+        mv[F[i]].push_back(S[i]);
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
+    vector<int64> vv;
+    for(auto [_,x]: mp) {
+        vv.push_back(x);
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    sort(ALL(vv), greater<>());
+    int64 ans = 0;
+    if(vv.size() >= 2) {
+        chmax(ans, vv[0]+vv[1]);
+    }
+    for(auto [_,v]: mv) {
+        if(v.size()<=1) continue;
+        sort(ALL(v), greater<>());
+        chmax(ans, v[0]+v[1]/2);
+    }
+    cout << ans << endl;
     return 0;
 }

@@ -88,40 +88,62 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title Distance - 距離
+ * @docs md/geometory/Distance.md
+ */
+template<class T> class Distance{
+public:
+    //Euclidean distance
+    inline static constexpr T euclid(const T& x1, const T& y1, const T& x2, const T& y2) {
+        return sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
+    }
+    //Chebyshev distance
+    inline static constexpr T chebyshev(T x1, T y1, T x2, T y2) {
+        return max(abs(x1 - x2),abs(y1 - y2));
+    }
+    //Manhattan distance
+    inline static constexpr T manhattan(T x1, T y1, T x2, T y2) {
+        return abs(x1 - x2)+abs(y1 - y2);
+    }
+    inline static constexpr T between_point_and_line(const T& x,const T& y,const T& x1,const T& y1,const T& x2,const T& y2){
+        return abs((y2 - y1)*x+(x1 - x2)*y-(y2-y1)*x1+(x2-x1)*y1)/sqrt((y2 - y1)*(y2 - y1)+(x1 - x2)*(x1 - x2));
+    }
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int N; cin >> N;
+    int M = 40;
+    long double inf=HIGHINF;
+    auto dp = multivector(N, M, inf);
+    dp[0][0]=0;
+    vector<long double> X(N),Y(N);
+    for(int i=0;i<N;++i) {
+        cin >> X[i] >> Y[i];
     }
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+    for(int i=1;i<N;++i) {
+        for(int j=0;j<M;++j) {
+            int p = i-(j+1);
+            if(p < 0) continue;
+            auto d = Distance<long double>::euclid(X[i],Y[i],X[p],Y[p]);
+            for(int k=0; k+j<M; ++k) {
+                chmin(dp[i][k+j],dp[p][k]+d);
             }
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    long double ans = dp[N-1][0];
+
+    vector<int64> pow2(M,1);
+    for(int i=1;i<M;++i) pow2[i] = pow2[i-1]*2;
+
+    for(int i=1;i<M;++i) chmin(ans,dp[N-1][i]+pow2[i-1]);
+    printf("%.10Lf\n",ans);
+
     return 0;
 }

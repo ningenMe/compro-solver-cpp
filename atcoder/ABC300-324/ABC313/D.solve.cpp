@@ -94,34 +94,94 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    
+
+    //   2,3,...K,K+1
+    // 1, ,3,...K,K+1
+    // 1,2, ,...K,K+1
+    // 1,2,3,.., ,K+1
+    // 1,2,3,...K,
+
+    //   2,3,...K,   ,K+2
+    //   2,3,...K,    ... , N
+
+    int N,K; cin >> N >> K;
+    auto edge = multivector(N+1,N+1,-1);
+    vector<int> node(N+1,-1);
+
+    //   2,3,...K,K+1
+    int Q_2toK1;
+    {
+        cout << "?";
+        for(int i=2;i<=K+1;++i) cout << " " << i;
+        cout << endl;
+        cin >> Q_2toK1;
+    }
+    int pre=Q_2toK1;
+
+    // 1, ,3,...K,K+1
+    // 1,2, ,...K,K+1
+    // 1,2,3,.., ,K+1
+    for(int n=2;n<=K;++n){
+        cout << "?";
+        for(int i=1;i<=K+1;++i) {
+            if(i==n) continue;
+            cout << " " << i;
+        } 
+        cout << endl;
+        int cur;
+        cin >> cur;
+        edge[n-1][n]=pre^cur;
+        edge[n][n-1]=pre^cur;
+        pre=cur;
     }
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
+    // 1,2,3,...K,
+    int Q_1toK;
+    {
+        cout << "?";
+        for(int i=1;i<=K;++i) cout << " " << i;
+        cout << endl;
+        cin >> Q_1toK;
+
+        int tmp=0;
+        for(int i=2;i+1<=K;i+=2) tmp ^= edge[i][i+1];
+        node[1] = tmp ^ Q_1toK;
+
+        edge[1][K+1]=Q_1toK^Q_2toK1;
+        edge[K+1][1]=Q_1toK^Q_2toK1;
+    }
+
+    //   2,3,...K,   ,K+2
+    //   2,3,...K,    ... , N
+    for(int n=K+2;n<=N;++n) {
+        cout << "?";
+        for(int i=2;i<=K;++i) cout << " " << i;
+        cout << " " << n;
+        cout << endl;
+        int tmp;
+        cin >> tmp;
+        
+        edge[1][n]=Q_1toK^tmp;
+        edge[n][1]=Q_1toK^tmp;
+    }
+
+    queue<int> q;
+    q.push(1);
     while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+        auto from = q.front(); q.pop();
+        for(int to=1; to<=N; ++to) {
+            if(edge[from][to]==-1) continue;
+
+            if(node[to]==-1) {
+                node[to]=node[from]^edge[from][to];
+                q.push(to);
             }
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    cout << "!";
+    for(int i=1;i<=N;++i) cout << " " << node[i];
+    cout << endl;
+
     return 0;
 }

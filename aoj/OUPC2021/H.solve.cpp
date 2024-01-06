@@ -101,10 +101,6 @@ public:
 
 //verify https://atcoder.jp/contests/abc021/tasks/abc021_d
 
-//NINGENME_MYSQL_URL=jdbc:mysql://ningenme-mysql.cqlhdfmylwpc.ap-northeast-1.rds.amazonaws.com:3306
-//NINGENME_MYSQL_MASTER_USER_USERNAME=master_user
-//NINGENME_MYSQL_MASTER_USER_PASSWORD=oyx1nbl59zmc
-
 /**
  * @url 
  * @est

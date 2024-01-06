@@ -133,28 +133,75 @@ public:
 constexpr long long MOD_998244353 = 998244353;
 constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
 
+using Mint = ModInt<MOD_998244353>;
+
 /**
  * @url 
  * @est
  */ 
 int main() {
-    using Mint = ModInt<MOD_998244353>;
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M,K; read(N),read(M),read(K);
-    auto dp = multivector(N,M+2,Mint(0));
-    {
-        int i=0;
-        for(int j=1;j<=M;++j) dp[i][j]=1;
-    }
-    for(int i=0;i+1<N;++i) {
-        for(int j=1;j<=M;++j) {
-            // 1,2,...,j-K,j-K+1...,j+K,...M
-            dp[i+1][1]                 +=dp[i][j];
-            if(K) dp[i+1][max(1,j-K+1)]-=dp[i][j];
-            if(K) dp[i+1][min(M+1,j+K)]+=dp[i][j];
+    int64 N; read(N);
+    vector<int> A(3);
+    for(int i=0;i<3;++i) read(A[i]);
+    int M = 61;
+    auto dp = multivector(M,1<<3,1<<3,1<<3,A[0],A[1],A[2],Mint(0));
+    dp[0][0][0][0][0][0][0] = 1;
+    for(int i=0;i+1<M;++i) {
+        int b = ((N>>i)&1);
+        for(int prev_bit = 0; prev_bit < 8; ++prev_bit) {
+            for(int curr_bit = 0; curr_bit < 8; ++curr_bit) {
+                int64 b0 = (curr_bit>>0) & 1;
+                int64 b1 = (curr_bit>>1) & 1;
+                int64 b2 = (curr_bit>>2) & 1;
+                if( (b0^b1) != b2 ) continue;
+                for(int prev_flag = 0; prev_flag < 8; ++prev_flag) {
+                    int pf0 = (prev_flag>>0) & 1;
+                    int pf1 = (prev_flag>>1) & 1;
+                    int pf2 = (prev_flag>>2) & 1;
+                    int curr_flag = 0;
+                    if(b) {
+                        int cf0 = b0 ? pf0 : 0;
+                        int cf1 = b1 ? pf1 : 0;
+                        int cf2 = b2 ? pf2 : 0;
+                        curr_flag = cf0 + (cf1<<1) + (cf2<<2);
+                    }
+                    else {
+                        int cf0 = (pf0 | b0);
+                        int cf1 = (pf1 | b1);
+                        int cf2 = (pf2 | b2);
+                        curr_flag = cf0 + (cf1<<1) + (cf2<<2);
+                    }
+                    for(int prev_one = 0; prev_one < 8; ++prev_one) {
+                        int curr_one = prev_one | ((b0<<0) + (b1<<1) + (b2<<2));
+                        for(int pa0=0;pa0<A[0];++pa0) {
+                            int ca0 = (pa0 + (b0<<i)) % A[0];
+                            for(int pa1=0;pa1<A[1];++pa1) {
+                                int ca1 = (pa1 + (b1<<i)) % A[1];
+                                for(int pa2=0;pa2<A[2];++pa2) {
+                                    int ca2 = (pa2 + (b2<<i)) % A[2];
+
+
+
+                                    dp[i+1][curr_bit][curr_flag][curr_one][ca0][ca1][ca2] += dp[i][prev_bit][prev_flag][prev_one][pa0][pa1][pa2];
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-        for(int j=1;j<=M;++j) dp[i+1][j] += dp[i+1][j-1];
     }
-    cout << accumulate(dp[N-1].begin()+1, dp[N-1].begin()+M+1, Mint(0)) << endl;
+    Mint ans=0;
+    {
+        for(int curr_bit = 0; curr_bit < 8; ++curr_bit) {
+            {
+                ans += dp[M-1][curr_bit][0][8-1][0][0][0];
+            }
+        }        
+    }
+    cout << ans << endl;
+    
     return 0;
 }

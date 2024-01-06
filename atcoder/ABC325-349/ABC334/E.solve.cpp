@@ -89,6 +89,51 @@ void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
 /*
+ * @title UnionFindTree - Union Find Tree
+ * @docs md/union-find-tree/UnionFindTree.md
+ */
+class UnionFindTree {
+    vector<int> parent,maxi,mini;
+    inline int root(int n) {
+        return (parent[n]<0?n:parent[n] = root(parent[n]));
+    }
+public:
+    UnionFindTree(const int N = 1) : parent(N,-1),maxi(N),mini(N){
+        iota(maxi.begin(),maxi.end(),0);
+        iota(mini.begin(),mini.end(),0);
+    }
+    inline bool connected(const int n, const int m) {
+        return root(n) == root(m);
+    }
+    inline void merge(int n,int m) {
+        n = root(n);
+        m = root(m);
+        if (n == m) return;
+        if(parent[n]>parent[m]) swap(n, m);
+        parent[n] += parent[m];
+        parent[m] = n;
+        maxi[n] = std::max(maxi[n],maxi[m]);
+        mini[n] = std::min(mini[n],mini[m]);
+    }
+    inline int min(const int n) {
+        return mini[root(n)];
+    }
+    inline int max(const int n) {
+        return maxi[root(n)];
+    }
+    inline int size(const int n){
+        return (-parent[root(n)]);
+    }
+    inline int operator[](const int n) {
+        return root(n);
+    }
+    inline void print() {
+        for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
+        cout << endl;
+    }
+};
+
+/*
  * @title ModInt
  * @docs md/util/ModInt.md
  */
@@ -133,28 +178,74 @@ public:
 constexpr long long MOD_998244353 = 998244353;
 constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
 
+using Mint = ModInt<MOD_998244353>;
 /**
  * @url 
  * @est
  */ 
 int main() {
-    using Mint = ModInt<MOD_998244353>;
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M,K; read(N),read(M),read(K);
-    auto dp = multivector(N,M+2,Mint(0));
-    {
-        int i=0;
-        for(int j=1;j<=M;++j) dp[i][j]=1;
+    int H,W; read(H),read(W);
+    UnionFindTree uf(H*W);
+    vector<string> vs(H);
+    for(int i=0; i<H; ++i) {
+        read(vs[i]);
     }
-    for(int i=0;i+1<N;++i) {
-        for(int j=1;j<=M;++j) {
-            // 1,2,...,j-K,j-K+1...,j+K,...M
-            dp[i+1][1]                 +=dp[i][j];
-            if(K) dp[i+1][max(1,j-K+1)]-=dp[i][j];
-            if(K) dp[i+1][min(M+1,j+K)]+=dp[i][j];
+    for(int i=0;i<H;++i) {
+        for(int j=0; j<W;++j) {
+            if(vs[i][j]!='#') continue;
+            if(i+1<H && vs[i+1][j]=='#') {
+                uf.merge(i*W+j,(i+1)*W+j);
+            }
+            if(j+1<W && vs[i][j+1]=='#') {
+                uf.merge(i*W+j,i*W+j+1);
+            }
         }
-        for(int j=1;j<=M;++j) dp[i+1][j] += dp[i+1][j-1];
     }
-    cout << accumulate(dp[N-1].begin()+1, dp[N-1].begin()+M+1, Mint(0)) << endl;
+    set<int> st;
+    for(int i=0;i<H;++i) {
+        for(int j=0; j<W;++j) {
+            if(vs[i][j]!='#') continue;
+            st.insert(uf[i*W+j]);
+        }
+    }
+    Mint ave = st.size();
+    Mint ans = 0;
+
+    vector<int> dy = {-1,1,0,0};
+    vector<int> dx = {0,0,-1,1};
+    int cc = 0;
+    for(int i=0;i<H;++i) {
+        for(int j=0; j<W;++j) {
+            if(vs[i][j]!='.') continue;
+            set<int> tmp;
+            for(int k=0;k<4;++k) {
+                int y = i + dy[k];
+                int x = j + dx[k];
+                if(0 <= y && y < H && 0<= x && x<W) {
+                    if(vs[y][x]=='#') tmp.insert(uf[y*W+x]);
+                }
+            }
+            if(tmp.size() == 0) {
+                ans += ave+1;
+            }
+            if(tmp.size() == 1) {
+                ans += ave;
+            }
+            if(tmp.size() == 2) {
+                ans += ave-1;
+            }
+            if(tmp.size() == 3) {
+                ans += ave-2;
+            }
+            if(tmp.size() == 4) {
+                ans += ave-3;
+            }
+            cc += 1;
+        }
+    }
+    if(cc) ans /= cc;
+    cout << ans << endl;
+
     return 0;
 }

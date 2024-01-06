@@ -88,40 +88,65 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int64 N,M; 
+vector<long double> dp;
+vector<int64> C;
+vector<int64> P;
+vector<int64> K;
+vector<vector<int64>> S;
+
+long double rec(int n) {
+    if(n >= M) {
+        return dp[M]=0;
+    }
+    if(dp[n]>0) {
+        return dp[n];
+    }
+    long double mini = HIGHINF;
+    for(int i=0;i<N;++i) {
+        // 全部 0 ならそれは使わない方が良い
+        if(K[i] == P[i]) continue;
+        
+        long double sum = P[i]*C[i];
+        for(int j=0; j<P[i]; ++j) {
+            if(S[i][j] == 0) continue;
+            sum += rec(n+S[i][j]);
+        }
+        sum /= (P[i]-K[i]);
+        chmin(mini,sum);
+    }
+
+    return dp[n]=mini;
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
-    }
+    // dp[i] = ポイント i のときの最小費用
+    // dp[i] = min( (C1 + dp[i+S11] / P + dp[i+S12] / P + ... + ) , )
+    // dp[i] = min( X1 , X2 , X3 , ... , XN)
+    // dp[i] = C1 + dp[i+0] / P + ... + dp[i+],
+    // dp[i]((P - k)/P) = C + (dp[i+S] + dp[i+S]) / P
+    // dp[i] = (PC + (dp[i+S] + dp[i+S])) / (P-k)
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    read(N),read(M);
+    dp.resize(M+1,-1);
+    C.resize(N);
+    P.resize(N);
+    K.resize(N,0);
+    S.resize(N);
+    for(int i=0;i<N;++i) {
+        read(C[i]), read(P[i]);
+        for(int j=0;j<P[i];++j) {
+            int64 s; read(s);
+            S[i].push_back(s);
+            if(s==0) K[i]++;
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    printf("%.10Lf",rec(0));
+
     return 0;
 }

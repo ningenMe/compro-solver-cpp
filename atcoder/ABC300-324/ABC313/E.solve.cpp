@@ -70,12 +70,12 @@ constexpr long double PI = 3.1415926535897932384626433L;
 template <class T> vector<T> multivector(size_t N,T init){return vector<T>(N,init);}
 template <class... T> auto multivector(size_t N,T... t){return vector<decltype(multivector(t...))>(N,multivector(t...));}
 template <class T> void corner(bool flg, T hoge) {if (flg) {cout << hoge << endl; exit(0);}}
+template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 template <class T, class U>ostream &operator<<(ostream &o, const map<T, U>&obj) {o << "{"; for (auto &x : obj) o << " {" << x.first << " : " << x.second << "}" << ","; o << " }"; return o;}
 template <class T>ostream &operator<<(ostream &o, const set<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const multiset<T>&obj) {o << "{"; for (auto itr = obj.begin(); itr != obj.end(); ++itr) o << (itr != obj.begin() ? ", " : "") << *itr; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const vector<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
 template <class T>ostream &operator<<(ostream &o, const deque<T>&obj) {o << "{"; for (int i = 0; i < (int)obj.size(); ++i)o << (i > 0 ? ", " : "") << obj[i]; o << "}"; return o;}
-template <class T, class U>ostream &operator<<(ostream &o, const pair<T, U>&obj) {o << "{" << obj.first << ", " << obj.second << "}"; return o;}
 void print(void) {cout << endl;}
 template <class Head> void print(Head&& head) {cout << head;print();}
 template <class Head, class... Tail> void print(Head&& head, Tail&&... tail) {cout << head << " ";print(forward<Tail>(tail)...);}
@@ -133,28 +133,81 @@ public:
 constexpr long long MOD_998244353 = 998244353;
 constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
 
+using Mint = ModInt<MOD_998244353>;
+
+string f(string s) {
+    string t="";
+    for(int i=0;i+1<s.size();++i) {
+        int d = s[i+1]-'0';
+        t += string(d, s[i]);
+    }
+    return t;
+}
+
+vector<pair<char,long long>> Rarts(string S){
+	char ch = S[0];
+	int cnt = 1;
+	vector<pair<char,long long>> res;
+ 	for(int i = 1; i < S.size(); ++i){
+		 if(S[i]==ch) {
+			 cnt++;
+		 }
+		 else{
+			 res.push_back({ch,cnt});
+			 ch = S[i];
+			 cnt = 1;
+		 }
+	}
+	res.push_back({ch,cnt});
+	return res;
+}
+
+//verify https://atcoder.jp/contests/agc039/tasks/agc039_a
+
 /**
  * @url 
  * @est
  */ 
 int main() {
-    using Mint = ModInt<MOD_998244353>;
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M,K; read(N),read(M),read(K);
-    auto dp = multivector(N,M+2,Mint(0));
-    {
-        int i=0;
-        for(int j=1;j<=M;++j) dp[i][j]=1;
-    }
+    int N; read(N);
+    string s; read(s);
+
     for(int i=0;i+1<N;++i) {
-        for(int j=1;j<=M;++j) {
-            // 1,2,...,j-K,j-K+1...,j+K,...M
-            dp[i+1][1]                 +=dp[i][j];
-            if(K) dp[i+1][max(1,j-K+1)]-=dp[i][j];
-            if(K) dp[i+1][min(M+1,j+K)]+=dp[i][j];
-        }
-        for(int j=1;j<=M;++j) dp[i+1][j] += dp[i+1][j-1];
+        int a=s[i]-'0';
+        int b=s[i+1]-'0';
+        corner(a>1 && b>1, "-1");
     }
-    cout << accumulate(dp[N-1].begin()+1, dp[N-1].begin()+M+1, Mint(0)) << endl;
+
+    Mint sum = 0;
+    auto rs = Rarts(s);
+    if(rs.size() > 1 && rs.back().first == '1') {
+        sum += rs.back().second;
+        rs.pop_back();
+    }
+
+    while(rs.size() > 1) {
+        auto p_k = rs.back(); rs.pop_back();
+        assert(p_k.second == 1);
+        int k = p_k.first - '0';
+        sum += 1;
+        sum += sum*(k-1) + 1;
+        //kが (k-1)*sum + 1
+        auto p_1 = rs.back(); rs.pop_back();
+        sum += p_1.second - 1;
+    }
+    if(rs.size()) {
+        sum += rs.back().second - 1;
+    }
+    else {
+        sum -= 1;
+    }
+    cout << sum << endl;
+
+    // 1411
+    // 1111 4 1
+    // 111 1111 4 
+    // 111 111 1111 
+
     return 0;
 }

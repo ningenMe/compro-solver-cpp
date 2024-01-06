@@ -94,34 +94,44 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int64 N,Q,X;
+    read(N),read(Q),read(X);
+    vector<int64> W(N),Z(2*N);
+    for(int i=0;i<N;++i) read(W[i]);
+    vector<int64> cnt(N,0LL);
+    int64 sum = accumulate(ALL(W),0LL);
+    for(int i=0;i<N;++i) Z[i]=Z[i+N]=W[i];
+    for(int i=1;i<2*N;++i) Z[i] += Z[i-1];
+
+    for(int i=0;i<N;++i) {
+        int64 Y = X;
+        int64 M = (Y/sum)*N;
+        Y %= sum;
+        if(Y) {
+            int64 j = lower_bound(Z.begin()+i,Z.end(),(i?Z[i-1]:0)+Y) - Z.begin();
+            M += (j-i+1);
+        }
+        cnt[i] = M;
     }
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+    int64 B = 50;
+    auto dp = multivector(N,B,-1LL);
+    {
+        for(int64 i=0;i<N;++i) dp[i][0] = (i+cnt[i])%N;
+    }
+    for(int64 j=1;j<B;++j) {
+        for(int64 i=0;i<N;++i) dp[i][j] = dp[dp[i][j-1]][j-1];
+    }
+    while(Q--) {
+        int64 K; read(K);
+        K--;
+        int64 i = 0;
+        for(int64 j=0;j<B;++j) {
+            if( (K>>j) & 1LL ) {
+                i = dp[i][j];
             }
         }
+        cout << cnt[i] << "\n";
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
     return 0;
 }

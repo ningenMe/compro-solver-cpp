@@ -132,29 +132,78 @@ public:
 };
 constexpr long long MOD_998244353 = 998244353;
 constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
+using Mint = ModInt<MOD_998244353>;
+
+vector<pair<char,long long>> Rarts(string S){
+	char ch = S[0];
+	int cnt = 1;
+	vector<pair<char,long long>> res;
+ 	for(int i = 1; i < S.size(); ++i){
+		 if(S[i]==ch) {
+			 cnt++;
+		 }
+		 else{
+			 res.push_back({ch,cnt});
+			 ch = S[i];
+			 cnt = 1;
+		 }
+	}
+	res.push_back({ch,cnt});
+	return res;
+}
+
+//verify https://atcoder.jp/contests/agc039/tasks/agc039_a
+
+/*
+ * @title CombinationMod - mod上の二項係数・階乗
+ * @docs md/math/CombinationMod.md
+ */
+template<long long mod> class CombinationMod {
+    vector<long long> fac,finv,inv;
+public:
+    CombinationMod(int N) : fac(N + 1), finv(N + 1), inv(N + 1) {
+        fac[0] = fac[1] = finv[0] = finv[1] = inv[1] = 1;
+        for (int i = 2; i <= N; ++i) {
+            fac[i] = fac[i - 1] * i % mod;
+            inv[i] = mod - inv[mod%i] * (mod / i) % mod;
+            finv[i] = finv[i - 1] * inv[i] % mod;
+        }
+    }
+    inline long long binom(int n, int k) {
+        return ((n < 0 || k < 0 || n < k) ? 0 : fac[n] * (finv[k] * finv[n - k] % mod) % mod);
+    }
+    inline long long factorial(int n) {
+        return fac[n];
+    }
+};
+
+//verify https://atcoder.jp/contests/abc021/tasks/abc021_d
+
+
+void solve() {
+    string S; read(S);    
+    auto ra = Rarts(S);
+    CombinationMod<MOD_998244353> cm(S.size());
+    int64 cnt = 0;
+    int64 sum = 0;
+    Mint mul = 1;
+    for(auto p: ra) {
+        cnt += (p.second-1);
+        sum += (p.second-1);
+        mul *= (p.second);
+    }
+    cout << cnt << " " << mul*cm.factorial(sum) << "\n";
+}
 
 /**
  * @url 
  * @est
  */ 
 int main() {
-    using Mint = ModInt<MOD_998244353>;
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M,K; read(N),read(M),read(K);
-    auto dp = multivector(N,M+2,Mint(0));
-    {
-        int i=0;
-        for(int j=1;j<=M;++j) dp[i][j]=1;
+    int T; read(T);
+    while(T--) {
+        solve();
     }
-    for(int i=0;i+1<N;++i) {
-        for(int j=1;j<=M;++j) {
-            // 1,2,...,j-K,j-K+1...,j+K,...M
-            dp[i+1][1]                 +=dp[i][j];
-            if(K) dp[i+1][max(1,j-K+1)]-=dp[i][j];
-            if(K) dp[i+1][min(M+1,j+K)]+=dp[i][j];
-        }
-        for(int j=1;j<=M;++j) dp[i+1][j] += dp[i+1][j-1];
-    }
-    cout << accumulate(dp[N-1].begin()+1, dp[N-1].begin()+M+1, Mint(0)) << endl;
     return 0;
 }

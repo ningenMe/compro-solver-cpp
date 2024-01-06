@@ -94,34 +94,30 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int64 N,K; read(N),read(K);
+    vector<int64> A(K);
+    for(int i=0;i<K;++i) {
+        int a; read(a);
+        A[i]=a;
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    if(K%2==0) {
+        int64 ans=0;
+        for(int i=0; i<K; i+=2) {
+            ans += abs(A[i]-A[i+1]);
         }
+        corner(1,ans);
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    int64 cnt = 0;
+    int64 ans = HIGHINF;
+    for(int i=1; i+1<K;i+=2) {
+        cnt += abs(A[i]-A[i+1]);
+    }
+    chmin(ans,cnt);
+    for(int i=0; i+2<K; i+=2) {
+        cnt -= abs(A[i+1]-A[i+2]);
+        cnt += abs(A[i+1]-A[i]);
+        chmin(ans,cnt);
+    }
+    cout << ans << endl;
     return 0;
 }

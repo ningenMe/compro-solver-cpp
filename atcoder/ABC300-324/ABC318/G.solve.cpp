@@ -88,6 +88,75 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+
+/*
+ * @title DinicMaxFlow - Dinicフロー
+ * @docs md/graph/DinicMaxFlow.md
+ */
+template <class TypeFlow> class DinicMaxFlow {
+    struct Edge {
+        size_t to, rev;
+        TypeFlow cap;
+    };
+    vector<vector<Edge>> edge;
+    vector<int> level, iter;
+    TypeFlow inf_flow;
+
+    inline void bfs(const size_t start) {
+        for (int i = 0; i < level.size(); ++i) level[i] = -1;
+        queue<size_t> q;
+        level[start] = 0;
+        q.push(start);
+        while (q.size()) {
+            auto from = q.front();
+            q.pop();
+            for (auto& e : edge[from]) {
+                if (e.cap > 0 && level[e.to] < 0) {
+                    level[e.to] = level[from] + 1;
+                    q.push(e.to);
+                }
+            }
+        }
+    }
+
+    inline TypeFlow dfs(size_t from, size_t goal, TypeFlow flow) {
+        if (from == goal) return flow;
+        for (int& i = iter[from]; i < edge[from].size(); ++i) {
+            //TODO 参照が効いてなくて冗長
+            auto& e = edge[from][i];
+            if (e.cap <= 0 || level[from] >= level[e.to]) continue;
+            TypeFlow dflow = dfs(e.to, goal, min(flow, e.cap));
+            if (dflow <= 0) continue;
+            e.cap -= dflow;
+            edge[e.to][e.rev].cap += dflow;
+            return dflow;
+        }
+        return 0;
+    }
+
+public:
+    DinicMaxFlow(const size_t N) : edge(N), level(N), iter(N), inf_flow(0) {
+        // do nothing
+    }
+
+    inline void make_edge(const size_t from,const size_t to, TypeFlow cap) {
+        edge[from].push_back({ to, edge[to].size(), cap });
+        edge[to].push_back({ from, edge[from].size() - 1, 0});
+        inf_flow += cap;
+    }
+
+    inline TypeFlow flow(const size_t start,const size_t goal) {
+        TypeFlow max_flow = 0;
+        while (1) {
+            bfs(start);
+            if (level[goal] < 0) return max_flow;
+            for (int i = 0; i < iter.size(); ++i) iter[i] = 0;
+            TypeFlow flow;
+            while ((flow = dfs(start, goal, inf_flow))>0) max_flow += flow;
+        }
+    }
+};
+
 /**
  * @url 
  * @est
@@ -95,33 +164,26 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
     int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int A,B,C; read(A),read(B),read(C);
+    A--,B--,C--;
+    DinicMaxFlow<int> dmf(2*N+2);
+    int S = 2*N;
+    int G = S+1;
+    while(M--) {
+        int u,v; read(u),read(v);
+        u--,v--;
+        dmf.make_edge(u+N,v,1);
+        dmf.make_edge(v+N,u,1);
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
+    for(int i=0;i<N;++i) {
+        dmf.make_edge(i,i+N,i==B?2:1);
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    {
+        dmf.make_edge(S,B,2);
+        dmf.make_edge(A+N,G,1);
+        dmf.make_edge(C+N,G,1);
+    }
+    int f = dmf.flow(S,G);
+    Yn(f>=2);
     return 0;
 }

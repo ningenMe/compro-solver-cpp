@@ -133,28 +133,190 @@ public:
 constexpr long long MOD_998244353 = 998244353;
 constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
 
+using Mint = ModInt<MOD_998244353>;
+
+/*
+ * @title SegmentTree - 非再帰抽象化セグメント木
+ * @docs md/segment-tree/SegmentTree.md
+ */
+template<class Monoid> class SegmentTree {
+    using TypeNode = typename Monoid::TypeNode;
+    size_t length;
+    size_t num;
+    vector<TypeNode> node;
+    vector<pair<int,int>> range;
+    inline void build() {
+        for (int i = length - 1; i >= 0; --i) node[i] = Monoid::func_fold(node[(i<<1)+0],node[(i<<1)+1]);
+        range.resize(2 * length);
+        for (int i = 0; i < length; ++i) range[i+length] = make_pair(i,i+1);
+        for (int i = length - 1; i >= 0; --i) range[i] = make_pair(range[(i<<1)+0].first,range[(i<<1)+1].second);
+    }
+public:
+
+    //unitで初期化
+    SegmentTree(const size_t num): num(num) {
+        for (length = 1; length <= num; length *= 2);
+        node.resize(2 * length, Monoid::unit_node);
+        build();
+    }
+
+    //vectorで初期化
+    SegmentTree(const vector<TypeNode> & vec) : num(vec.size()) {
+        for (length = 1; length <= vec.size(); length *= 2);
+        node.resize(2 * length, Monoid::unit_node);
+        for (int i = 0; i < vec.size(); ++i) node[i + length] = vec[i];
+        build();
+    }
+
+    //同じinitで初期化
+    SegmentTree(const size_t num, const TypeNode init) : num(num) {
+        for (length = 1; length <= num; length *= 2);
+        node.resize(2 * length, Monoid::unit_node);
+        for (int i = 0; i < length; ++i) node[i+length] = init;
+        build();
+    }
+
+    //[idx,idx+1)
+    void operate(size_t idx, const TypeNode var) {
+        if(idx < 0 || length <= idx) return;
+        idx += length;
+        node[idx] = Monoid::func_operate(node[idx],var);
+        while(idx >>= 1) node[idx] = Monoid::func_fold(node[(idx<<1)+0],node[(idx<<1)+1]);
+    }
+
+    //[l,r)
+    TypeNode fold(int l, int r) {
+        if (l < 0 || length <= l || r < 0 || length < r) return Monoid::unit_node;
+        TypeNode vl = Monoid::unit_node, vr = Monoid::unit_node;
+        for(l += length, r += length; l < r; l >>=1, r >>=1) {
+            if(l&1) vl = Monoid::func_fold(vl,node[l++]);
+            if(r&1) vr = Monoid::func_fold(node[--r],vr);
+        }
+        return Monoid::func_fold(vl,vr);
+    }
+
+    //range[l,r) return [l,r] search max right
+    int prefix_binary_search(int l, int r, TypeNode var) {
+        assert(0 <= l && l < length && 0 < r && r <= length);
+        TypeNode ret = Monoid::unit_node;
+        size_t off = l;
+        for(size_t idx = l+length; idx < 2*length && off < r; ){
+            if(range[idx].second<=r && !Monoid::func_check(Monoid::func_fold(ret,node[idx]),var)) {
+                ret = Monoid::func_fold(ret,node[idx]);
+                off = range[idx++].second;
+                if(!(idx&1)) idx >>= 1;
+            }
+            else{
+                idx <<=1;
+            }
+        }
+        return off;
+    }
+
+    //range(l,r] return [l,r] search max left
+    int suffix_binary_search(const int l, const int r, const TypeNode var) {
+        assert(-1 <= l && l < (int)length-1 && 0 <= r && r < length);
+        TypeNode ret = Monoid::unit_node;
+        int off = r;
+        for(size_t idx = r+length; idx < 2*length && l < off; ){
+            if(l < range[idx].first && !Monoid::func_check(Monoid::func_fold(node[idx],ret),var)) {
+                ret = Monoid::func_fold(node[idx],ret);
+                off = range[idx--].first-1;
+                if(idx&1) idx >>= 1;
+            }
+            else{
+                idx = (idx<<1)+1;
+            }
+        }
+        return off;
+    }
+
+    void print(){
+        // cout << "node" << endl;
+        // for(int i = 1,j = 1; i < 2*length; ++i) {
+        // 	cout << node[i] << " ";
+        // 	if(i==((1<<j)-1) && ++j) cout << endl;
+        // }
+        cout << "vector" << endl;
+        cout << "{ " << fold(0,1);
+        for(int i = 1; i < length; ++i) cout << ", " << fold(i,i+1);
+        cout << " }" << endl;
+    }
+};
+
+/*
+ * @title MonoidRangeSumPointAdd - [区間和, 一点加算]
+ * @docs md/operator/monoid/MonoidRangeSumPointAdd.md
+ */
+template<class T> struct MonoidRangeSumPointUpdate {
+    using TypeNode = T;
+    inline static constexpr TypeNode unit_node = 0;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+    inline static constexpr TypeNode func_operate(TypeNode l,TypeNode r){return r;}
+    inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var == nodeVal;}
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
-    using Mint = ModInt<MOD_998244353>;
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M,K; read(N),read(M),read(K);
-    auto dp = multivector(N,M+2,Mint(0));
-    {
-        int i=0;
-        for(int j=1;j<=M;++j) dp[i][j]=1;
-    }
-    for(int i=0;i+1<N;++i) {
-        for(int j=1;j<=M;++j) {
-            // 1,2,...,j-K,j-K+1...,j+K,...M
-            dp[i+1][1]                 +=dp[i][j];
-            if(K) dp[i+1][max(1,j-K+1)]-=dp[i][j];
-            if(K) dp[i+1][min(M+1,j+K)]+=dp[i][j];
+    int N; read(N);
+    vector<int64> A(N+1,0),B(N+1,0),C(N+1,0);
+    for(int i=1;i<=N;++i) read(A[i]);
+    Mint ans = 0;
+    vector<int64> F(N),G(N);
+    SegmentTree<MonoidRangeSumPointUpdate<int64>> segF(N),segG(N);
+
+    for(int64 i=0;i<30;++i) {
+        for(int j=0;j<N;++j) F[j]=G[j]=HIGHINF;
+        for(int j=1;j<=N;++j) B[j] = ((A[j]>>i) & 1);
+        for(int j=1;j<=N;++j) C[j] = B[j]^C[j-1];
+        int SF=0,SG=0;
+        for(int j=1;j<=N;++j) {
+            if(C[j]==1) {
+                F[SF++]=j;
+            }
+            else {
+                G[SG++]=j;
+            }
         }
-        for(int j=1;j<=M;++j) dp[i+1][j] += dp[i+1][j-1];
+        Mint pow2 = (1LL<<i);
+        for(int j=0;j<SF;++j) segF.operate(j,F[j]);
+        for(int j=0;j<SG;++j) segG.operate(j,G[j]);
+        Mint cnt = 0;
+        {
+            for(int j=0;j<SF; ++j) {
+                int64 x = F[j];
+                if(B[x] == 0) {
+                    int64 k = lower_bound(ALL(G),x)-G.begin();
+                    int64 M = SG - k;
+                    cnt += pow2 * (segG.fold(k,SG) - M*x + M);
+                }
+                else {
+                    int64 M = SF-j;
+                    cnt += pow2 * (segF.fold(j,SF) - M*x + M);
+                }
+            }
+        }
+        {
+            for(int j=0;j<SG; ++j) {
+                int64 x = G[j];
+                if(B[x] == 0) {
+                    int64 k = lower_bound(ALL(F),x)-F.begin();
+                    int64 M = SF - k;
+                    cnt += pow2 * (segF.fold(k,SF) - M*x + M);
+                }
+                else {
+                    int64 M = SG-j;
+                    cnt += pow2 * (segG.fold(j,SG) - M*x + M);
+                }
+            }
+        }
+        ans += cnt;
     }
-    cout << accumulate(dp[N-1].begin()+1, dp[N-1].begin()+M+1, Mint(0)) << endl;
+    cout << ans << endl;
+
     return 0;
 }

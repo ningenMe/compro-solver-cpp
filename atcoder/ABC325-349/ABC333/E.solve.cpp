@@ -94,34 +94,44 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
-    }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+    int64 N; read(N);
+    vector<int64> t(N),x(N);
+    for(int i=0;i<N;++i) read(t[i]), read(x[i]);
+    for(int i=0;i<N;++i) x[i]--;
+    vector<int> cnt(N,0);
+    vector<int> ans(N,-1);
+    for(int i=N-1; 0 <= i; --i) {
+        if(t[i]==2) {
+            cnt[x[i]]++;
+        }
+        else {
+            if(cnt[x[i]]==0) {
+                ans[i] = 0;
             }
+            else {
+                ans[i] = 1;
+                cnt[x[i]]--;
+            }            
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    corner(accumulate(ALL(cnt), 0) > 0, "-1");
+    int K = 0, K_max = 0;
+    for(int i=0; i < N; ++i) {
+        if(t[i] == 1) {
+            if(ans[i] == 1) K++;
+            if(ans[i] == 0);
+        }
+        else {
+            K--;
+        }
+        chmax(K_max, K);
+    }
+    vector<int> ans2;
+    for(int i=0; i<N; ++i) if(ans[i]!=-1) ans2.push_back(ans[i]);
+
+    cout << K_max << endl;
+    int M = ans2.size();
+    for(int i=0; i < M; ++i) cout << ans2[i] << " \n"[i==M-1];
+
     return 0;
 }

@@ -88,40 +88,49 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int N,M;
+set<string> st;
+vector<string> vs;
+string ans="-1";
+
+void dfs(const string s, const vector<int>& idx, int i) {
+    if(ans!="-1") return;
+
+    if(i >= N) {
+        if(3 <= s.size() && s.size() <= 16 && !st.count(s)) {
+            ans=s;
+        }
+        return;
+    }
+    for(int j=1;j<16;++j) {
+        string t = s + string(j,'_') + vs[idx[i]];
+        if(t.size() > 16) break;
+        dfs(t, idx, i+1);
+    }
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    read(N),read(M);
+    for(int i=0;i<N;++i) {
+        string s; read(s);
+        vs.push_back(s);
     }
+    for(int i=0;i<M;++i) {
+        string s; read(s);
+        st.insert(s);
+    }
+    vector<int> idx(N);
+    iota(ALL(idx),0);
+    do {
+        int i=0;
+        dfs(vs[idx[i]],idx,i+1);
+    } while(next_permutation(ALL(idx)));
+    cout << ans << endl;
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
-    }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
     return 0;
 }

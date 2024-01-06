@@ -94,34 +94,24 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int N; read(N);
+    vector<int> A(N);
+    for(int i=0;i<N;++i) read(A[i]);
+    int M; read(M);
+    int L = 100010;
+    vector<int> dp(L,0);
+    for(int i=0;i<M;++i) {
+        int b; read(b);
+        dp[b]=2;
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    dp[0]=1;
+    for(int i=0;i<L;++i) {
+        if(dp[i]!=1) continue;
+        for(int a: A) {
+            if(i+a<=L && dp[i+a]!=2) dp[i+a]=1;
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    int X; read(X);
+    Yn(dp[X]==1);
     return 0;
 }

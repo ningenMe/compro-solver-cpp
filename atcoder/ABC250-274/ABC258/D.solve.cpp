@@ -88,40 +88,114 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title SparseTable
+ * @docs md/static-range-query/SparseTable.md
+ */
+template<class Operator> class SparseTable{
+public:
+    using TypeNode = typename Operator::TypeNode;
+    vector<TypeNode> node;
+    vector<size_t> idx;
+    size_t depth;
+    size_t length;
+
+    SparseTable(const vector<TypeNode>& vec) {
+        for(depth = 0;(1<<depth)<=vec.size();++depth);
+        length = (1<<depth);
+        node.resize(depth*length);
+        for(int i = 0; i < vec.size(); ++i) node[i] = vec[i];
+        for(int i = 1; i < depth; ++i) for(int j = 0; j + (1<<i) < (1<<depth); ++j) node[i*length+j] = Operator::func_fold(node[(i-1)*length+j],node[(i-1)*length+j + (1 << (i-1))]);
+        idx.resize(vec.size()+1);
+        for(int i = 2; i < vec.size()+1; ++i) idx[i] = idx[i>>1] + 1;
+    }
+
+    //[l,r)
+    TypeNode fold(const int l,const int r) {
+        size_t bit = idx[r-l];
+        return Operator::func_fold(node[bit*length+l],node[bit*length+r - (1<<bit)]);
+    }
+};
+
+template<class T> struct NodeMin {
+    using TypeNode = T;
+    inline static constexpr TypeNode unitNode = LOWINF;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return min(l,r);}
+};
+
+/*
+ * @title DisjointSparseTable
+ * @docs md/static-range-query/DisjointSparseTable.md
+ */
+template<class Operator> class DisjointSparseTable{
+public:
+    using TypeNode = typename Operator::TypeNode;
+    size_t depth;
+    size_t length;
+    vector<TypeNode> node;
+    vector<size_t> msb;
+
+    DisjointSparseTable(const vector<TypeNode>& vec) {
+        for(depth = 0;(1<<depth)<=vec.size();++depth);
+        length = (1<<depth);
+
+        //msb
+        msb.resize(length,0);
+        for(int i = 0; i < length; ++i) for(int j = 0; j < depth; ++j) if(i>>j) msb[i] = j;
+
+        //init value
+        node.resize(depth*length,Operator::unit_node);
+        for(int i = 0; i < vec.size(); ++i) node[i] = vec[i];
+
+        for(int i = 1; i < depth; ++i) {
+            for(int r = (1<<i),l = r-1; r < length; r += (2<<i),l = r-1){
+                //init accumulate
+                node[i*length+l] = node[l];
+                node[i*length+r] = node[r];
+                //accumulate
+                for(int k = 1; k < (1<<i); ++k) {
+                    node[i*length+l-k] = Operator::func_fold(node[i*length+l-k+1],node[l-k]);
+                    node[i*length+r+k] = Operator::func_fold(node[i*length+r+k-1],node[r+k]);
+                }
+            }
+        }
+    }
+
+    //[l,r)
+    TypeNode fold(int l,int r) {
+        r--;
+        return (l>r||l<0||length<=r) ? Operator::unit_node: (l==r ? node[l] : Operator::func_fold(node[msb[l^r]*length+l],node[msb[l^r]*length+r]));
+    }
+};
+
+//sum
+template<class T> struct NodeSum {
+    using TypeNode = T;
+    inline static constexpr TypeNode unit_node = 0;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int64 N,X; read(N),read(X);
+    vector<int64> A(N),B(N);
+    for(int i=0;i<N;++i) {
+        read(A[i]),read(B[i]);
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
+    SparseTable<NodeMin<int64>> st1(B);
+    DisjointSparseTable<NodeSum<int64>> st2(A),st3(B);
+    int64 ans = 8*HIGHINF;
+    for(int r=1;r<=N;++r) {
+        int64 sum = 0;
+        sum += st2.fold(0,r);
+        sum += st3.fold(0,r);
+        sum += st1.fold(0,r)*(X-r);
+        chmin(ans,sum);
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    cout << ans << endl;
     return 0;
 }

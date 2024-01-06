@@ -88,40 +88,121 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title Distance - 距離
+ * @docs md/geometory/Distance.md
+ */
+template<class T> class Distance{
+public:
+    //Euclidean distance
+    inline static constexpr T euclid(const T& x1, const T& y1, const T& x2, const T& y2) {
+        return sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
+    }
+    //Chebyshev distance
+    inline static constexpr T chebyshev(T x1, T y1, T x2, T y2) {
+        return max(abs(x1 - x2),abs(y1 - y2));
+    }
+    //Manhattan distance
+    inline static constexpr T manhattan(T x1, T y1, T x2, T y2) {
+        return abs(x1 - x2)+abs(y1 - y2);
+    }
+    inline static constexpr T between_point_and_line(const T& x,const T& y,const T& x1,const T& y1,const T& x2,const T& y2){
+        return abs((y2 - y1)*x+(x1 - x2)*y-(y2-y1)*x1+(x2-x1)*y1)/sqrt((y2 - y1)*(y2 - y1)+(x1 - x2)*(x1 - x2));
+    }
+};
+
+/*
+ * @title UnionFindTree - Union Find Tree
+ * @docs md/union-find-tree/UnionFindTree.md
+ */
+class UnionFindTree {
+    vector<int> parent,maxi,mini;
+    inline int root(int n) {
+        return (parent[n]<0?n:parent[n] = root(parent[n]));
+    }
+public:
+    UnionFindTree(const int N = 1) : parent(N,-1),maxi(N),mini(N){
+        iota(maxi.begin(),maxi.end(),0);
+        iota(mini.begin(),mini.end(),0);
+    }
+    inline bool connected(const int n, const int m) {
+        return root(n) == root(m);
+    }
+    inline void merge(int n,int m) {
+        n = root(n);
+        m = root(m);
+        if (n == m) return;
+        if(parent[n]>parent[m]) swap(n, m);
+        parent[n] += parent[m];
+        parent[m] = n;
+        maxi[n] = std::max(maxi[n],maxi[m]);
+        mini[n] = std::min(mini[n],mini[m]);
+    }
+    inline int min(const int n) {
+        return mini[root(n)];
+    }
+    inline int max(const int n) {
+        return maxi[root(n)];
+    }
+    inline int size(const int n){
+        return (-parent[root(n)]);
+    }
+    inline int operator[](const int n) {
+        return root(n);
+    }
+    inline void print() {
+        for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
+        cout << endl;
+    }
+};
+
+template<class T> inline vector<pair<T,T>> CircleIntersection(pair<T,T> p1, T r1, pair<T,T> p2, T r2, T eps = 1e-6) {
+	vector<pair<T,T>> res;
+	T x1 = p1.first;
+	T y1 = p1.second;
+	T x2 = p2.first;
+	T y2 = p2.second;
+	if(abs(x1-x2) < eps && abs(y1-y2) < eps && abs(r1-r2) < eps) return res;
+	if(r1 + r2 + eps < sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2))) return res;
+	T a = 2*(x1-x2);
+	T b = 2*(y1-y2);
+	T c = -(x1*x1-x2*x2) - (y1*y1-y2*y2) + (r1*r1 - r2*r2);
+	T d = a*x1+b*y1+c;
+	T e = (a*a+b*b)*r1*r1-d*d;
+	if(e<0) return res;
+	e = sqrt(e);
+	T x3 = (-a*d+b*e)/(a*a+b*b) + x1;
+	T y3 = (-b*d-a*e)/(a*a+b*b) + y1;
+	T x4 = (-a*d-b*e)/(a*a+b*b) + x1;
+	T y4 = (-b*d+a*e)/(a*a+b*b) + y1;
+	res.push_back({x3,y3});
+	res.push_back({x4,y4});
+	return res;
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int N; 
+    cin >> N;
+    vector<pair<long double,long double>> XY(N+2);
+    vector<long double> R(N+2,0);
+    UnionFindTree uf(N+2);
+    cin >> XY[N].first >> XY[N].second;
+    cin >> XY[N+1].first >> XY[N+1].second;
+    for(int i=0;i<N;++i) {
+        cin >> XY[i].first >> XY[i].second >> R[i];
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    for(int i=0;i<N+2;++i) {
+        for(int j=i+1;j<N+2;++j) {
+            auto v = CircleIntersection(XY[i],R[i],XY[j],R[j]);
+            if(v.empty()) continue;
+            uf.merge(i,j);
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    Yn(uf.connected(N,N+1));
     return 0;
 }

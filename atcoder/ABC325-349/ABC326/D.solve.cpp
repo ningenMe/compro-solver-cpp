@@ -88,40 +88,77 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int N; 
+string S,T; 
+vector<string> vs;
+string base;
+
+bool is_ok() {
+    for(int j=0;j<N;++j) {
+        string s;
+        for(int i=0;i<N;++i) {
+            s.push_back(vs[i][j]);
+        }
+        sort(ALL(s));
+        if(s != base) return false;
+    }
+    {
+        string U;
+        for(int j=0;j<N;++j) {
+            for(int i=0;i<N;++i) {
+                if(vs[i][j]!='.') {
+                    U.push_back(vs[i][j]);
+                    break;
+                }
+            }
+        }
+        if(U != T) return false;
+    }
+    return true;
+}
+
+bool dfs(int i) {
+    if(i < N) {
+        string s = base;
+        do {
+            char c;
+            for(int j=N-1; 0<=j; --j) if(s[j] != '.') c = s[j];
+            if(c!=S[i]) continue;
+
+            vs.push_back(s);
+            if (dfs(i+1)) return true;
+            vs.pop_back();
+
+        } while(next_permutation(ALL(s)));
+    }
+    else {
+        if(is_ok()) return true;
+    }
+    return false;
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    // (5C3 * 3!)^5 = (10 * 6)^5 = (60)^5
+    read(N);
+    read(S);
+    read(T);
+    {
+        string s(N,'.');
+        s[0]='A', s[1]='B', s[2]='C';
+        sort(ALL(s));
+        base = s;
     }
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
+    int ans = dfs(0);
+    Yn(ans);
+    if(ans) {
+        for(int i=0;i<N; ++i) cout << vs[i] << "\n";
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+
     return 0;
 }

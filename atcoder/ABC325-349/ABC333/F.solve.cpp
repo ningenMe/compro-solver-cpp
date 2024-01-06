@@ -133,28 +133,69 @@ public:
 constexpr long long MOD_998244353 = 998244353;
 constexpr long long MOD_1000000007 = 1'000'000'000LL + 7; //'
 
+/*
+ * @title CombinationMod - mod上の二項係数・階乗
+ * @docs md/math/CombinationMod.md
+ */
+template<long long mod> class CombinationMod {
+    vector<long long> fac,finv,inv;
+public:
+    CombinationMod(int N) : fac(N + 1), finv(N + 1), inv(N + 1) {
+        fac[0] = fac[1] = finv[0] = finv[1] = inv[1] = 1;
+        for (int i = 2; i <= N; ++i) {
+            fac[i] = fac[i - 1] * i % mod;
+            inv[i] = mod - inv[mod%i] * (mod / i) % mod;
+            finv[i] = finv[i - 1] * inv[i] % mod;
+        }
+    }
+    inline long long binom(int n, int k) {
+        return ((n < 0 || k < 0 || n < k) ? 0 : fac[n] * (finv[k] * finv[n - k] % mod) % mod);
+    }
+    inline long long factorial(int n) {
+        return fac[n];
+    }
+};
+
+//verify https://atcoder.jp/contests/abc021/tasks/abc021_d
+
+using Mint = ModInt<MOD_998244353>;
+
 /**
  * @url 
  * @est
  */ 
 int main() {
-    using Mint = ModInt<MOD_998244353>;
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M,K; read(N),read(M),read(K);
-    auto dp = multivector(N,M+2,Mint(0));
-    {
-        int i=0;
-        for(int j=1;j<=M;++j) dp[i][j]=1;
-    }
-    for(int i=0;i+1<N;++i) {
-        for(int j=1;j<=M;++j) {
-            // 1,2,...,j-K,j-K+1...,j+K,...M
-            dp[i+1][1]                 +=dp[i][j];
-            if(K) dp[i+1][max(1,j-K+1)]-=dp[i][j];
-            if(K) dp[i+1][min(M+1,j+K)]+=dp[i][j];
+    int N; read(N);
+
+    Mint inv2 = Mint(1) / Mint(2);
+    vector<Mint> inv2_n(N+1, 1);
+    for(int i=1; i <= N; ++i) inv2_n[i] = inv2*inv2_n[i-1];
+    CombinationMod<MOD_998244353> cm(N+10);
+
+    vector<Mint> p(N+1,0);
+    p[1] = 1;
+
+    for(int n=2; n<=N; ++n) {
+        p[n] = 0;
+        p[n] += inv2_n[n-1] * p[1];
+        for(int j=1; j<n-1; ++j) {
+            p[n] += inv2_n[n]* cm.binom(n-1,j) * p[n - j];
         }
-        for(int j=1;j<=M;++j) dp[i+1][j] += dp[i+1][j-1];
+        Mint c = Mint(1) - inv2_n[n];
+        p[n] *= c.inv();
     }
-    cout << accumulate(dp[N-1].begin()+1, dp[N-1].begin()+M+1, Mint(0)) << endl;
+
+    vector<Mint> ans(N+1,0);
+    ans[N] = p[N];
+    for(int i=1; i<N; ++i) {
+        for(int j=0; j<N; ++j) {
+            ans[i] += inv2_n[i] * cm.binom(i-1,j) * p[N-j];
+        }
+    }
+    for(int i=1; i<=N; ++i) {
+        cout << ans[i] << " \n"[i==N];
+    }
+    
     return 0;
 }

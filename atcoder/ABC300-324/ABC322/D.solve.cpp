@@ -88,40 +88,117 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+vector<string> rotate(const vector<string>& vs) {
+    int M = vs.size();
+    vector<string> res(M, string(M,'.'));
+    for(int i=0;i<M;++i) {
+        for(int j=0;j<M;++j) {
+            res[i][j] = vs[M-1-j][i];
+        }
+    }
+    return res;
+}
+
+bool is_ok(const vector<string>& vs0, const vector<string>& vs1, const vector<string>& vs2) {
+    int M = vs0.size();
+    vector<string> vs(3*M, string(3*M,'.'));
+
+    // print();
+    // for(int i=0;i<M;++i) print(vs0[i]);
+    // print();
+    // for(int i=0;i<M;++i) print(vs1[i]);
+    // print();
+    // for(int i=0;i<M;++i) print(vs2[i]);
+    // print();
+
+    for(int y0=1; y0+M<3*M; ++y0) {
+        for(int x0=1; x0+M<3*M; ++x0) {
+            for(int y1=1; y1+M<3*M; ++y1) {
+                for(int x1=1; x1+M<3*M; ++x1) {
+                    for(int y2=1; y2+M<3*M; ++y2) {
+                        for(int x2=1; x2+M<3*M; ++x2) {
+                            auto res = vs;
+
+                            int flg = true;
+                            for(int i=0;i<M && flg;++i) {
+                                for(int j=0;j<M && flg;++j) {
+                                    if(vs0[i][j] == '#') {
+                                        if(res[i+y0][j+x0] == '#') flg = false;
+                                        if(!(M <= i+y0 && i+y0 < 2*M && M <= j+x0 && j+x0 < 2*M)) flg = false;
+                                        res[i+y0][j+x0] = vs0[i][j];
+                                    }
+                                }
+                            }
+                            if(!flg) continue;
+
+                            for(int i=0;i<M && flg;++i) {
+                                for(int j=0;j<M && flg;++j) {
+                                    if(vs1[i][j] == '#') {
+                                        if(res[i+y1][j+x1] == '#') flg = false;
+                                        if(!(M <= i+y1 && i+y1 < 2*M && M <= j+x1 && j+x1 < 2*M)) flg = false;
+                                        res[i+y1][j+x1] = vs1[i][j];
+                                    }
+                                }
+                            }
+                            if(!flg) continue;
+
+                            for(int i=0;i<M && flg;++i) {
+                                for(int j=0;j<M && flg;++j) {
+                                    if(vs2[i][j] == '#') {
+                                        if(res[i+y2][j+x2] == '#') flg = false;
+                                        if(!(M <= i+y2 && i+y2 < 2*M && M <= j+x2 && j+x2 < 2*M)) flg = false;
+                                        res[i+y2][j+x2] = vs2[i][j];
+                                    }
+                                }
+                            }
+                            if(!flg) continue;
+
+                            for(int i=M;i<2*M && flg;++i) {
+                                for(int j=M;j<2*M && flg;++j) {
+                                    if(res[i][j] == '.') flg = false;
+                                }
+                            }
+
+                            if(flg) return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int N = 3;
+    int M = 4;
+    auto vvs = multivector(N,M,string(""));
+    for(int i=0;i<N;++i) {
+        for(int j=0;j<M;++j) {
+            read(vvs[i][j]);
+        }
     }
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
+    int flg = false;
+
+    for(int rot0 = 0; rot0 < 4; ++rot0) {
+        for(int rot1 = 0; rot1 < 4; ++rot1) {
+            for(int rot2 = 0; rot2 < 4; ++rot2) {
+                auto a0 = vvs[0];
+                auto a1 = vvs[1];
+                auto a2 = vvs[2];
+                for(int i=0;i<rot0;++i) a0 = rotate(a0);
+                for(int i=0;i<rot1;++i) a1 = rotate(a1);
+                for(int i=0;i<rot2;++i) a2 = rotate(a2);
+                if(is_ok(a0,a1,a2)) flg = true;
             }
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    Yn(flg);
     return 0;
 }

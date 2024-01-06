@@ -88,40 +88,117 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title DynamicSegmentTree - 非再帰抽象化動的セグメント木
+ * @docs md/segment-tree/DynamicSegmentTree.md
+ */
+template<class Monoid> class DynamicSegmentTree {
+    using TypeNode = typename Monoid::TypeNode;
+    using i64 = long long;
+
+    struct Node{
+        Node *left, *right;
+        TypeNode val;
+        Node():left(nullptr),right(nullptr),val(Monoid::unit_node) {}
+    };
+
+    TypeNode dfs(i64 l,i64 r,i64 nl,i64 nr,Node* node) {
+        if(l <= nl && nr <= r) return node->val;
+        if(nr <= l || r <= nl) return Monoid::unit_node;
+        TypeNode vl=Monoid::unit_node, vr=Monoid::unit_node;
+        i64 m = (nl+nr)>>1;
+        if(node->left)  vl = dfs(l,r,nl,m,node->left);
+        if(node->right) vr = dfs(l,r,m,nr,node->right);
+        return Monoid::func_fold(vl,vr);
+    }
+
+    i64 length;
+    Node *root;
+public:
+    //unitで初期化
+    DynamicSegmentTree() : length(1) {
+        root = new Node();
+    }
+    //[idx,idx+1)
+    void operate(i64 idx, const TypeNode val) {
+        if(idx < 0) return;
+        for (;length <= idx; length *= 2) {
+            Node *new_root = new Node();
+            TypeNode val = root->val;
+            new_root->left = root;
+            root = new_root;
+            root->val = val;
+        }
+        Node* node = root;
+        i64 l = 0, r = length, m;
+        stack<Node*> st;
+
+        while(r-l>1) {
+            st.push(node);
+            m = (r+l)>>1;
+            if(idx<m) {
+                r = m;
+                if(!node->left) node->left=new Node();
+                node = node->left;
+            }
+            else {
+                l = m;
+                if(!node->right) node->right = new Node();
+                node = node->right;
+            }
+        }
+        node->val = Monoid::func_operate(node->val,val);
+        while(st.size()) {
+            node = st.top(); st.pop();
+            TypeNode vl=Monoid::unit_node, vr=Monoid::unit_node;
+            if(node->left)  vl = node->left->val;
+            if(node->right) vr = node->right->val;
+            node->val = Monoid::func_fold(vl,vr);
+        }
+    }
+
+    //[l,r)
+    TypeNode fold(i64 l, i64 r) {
+        if (l < 0 || length <= l || r < 0) return Monoid::unit_node;
+        return dfs(l,r,0,length,root);
+    }
+};
+
+/*
+ * @title MonoidRangeMinPointUpdate - [区間min, 点更新]
+ * @docs md/operator/monoid/MonoidRangeMinPointUpdate.md
+ */
+template<class T> struct MonoidRangeSumPointAdd {
+    using TypeNode = T;
+    inline static constexpr TypeNode unit_node = 0;
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return l+r;}
+    inline static constexpr TypeNode func_operate(TypeNode l,TypeNode r){return l+r;}
+    inline static constexpr bool func_check(TypeNode nodeVal,TypeNode var){return var > nodeVal;}
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    DynamicSegmentTree<MonoidRangeSumPointAdd<int64>> seg1,seg2;
+    int N,Q; read(N),read(Q);
+    int64 sum = 0;
+    for(int i=0;i<N;++i) {
+        int64 a; read(a);
+        seg1.operate(a,a);
+        seg2.operate(a,1);
+        sum += a;
+    }
+    while(Q--) {
+        int64 x; read(x);
+        int64 sr = seg1.fold(x, LOWINF);
+        int64 sl = sum - sr;
+        int64 cr = seg2.fold(x, LOWINF);
+        int64 cl = N - cr;
+        cout << sr - cr*x + cl*x - sl << "\n";
     }
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
-    }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
     return 0;
 }

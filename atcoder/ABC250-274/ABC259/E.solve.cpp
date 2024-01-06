@@ -94,34 +94,35 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
-    }
+    // 12 = 2*2*3
+    // 18 = 2*3*3
+    // 36 = 2*2*3*3
+    int N; read(N);
+    vector<vector<pair<int,int>>> vvp(N);
+    unordered_map<int,int> mp_maxi,mp_cnt;
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    for(int i=0;i<N;++i) {
+        int M; read(M);
+        for(int j=0;j<M;++j) {
+            int p,e; read(p),read(e);
+            vvp[i].emplace_back(p,e);
+            chmax(mp_maxi[p],e);
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    for(int i=0;i<N;++i) {
+        for(auto [p,e]: vvp[i]) {
+            if(mp_maxi[p]==e) mp_cnt[p]++;
+        }
+    }
+    set<vector<int>> st;
+    for(int i=0;i<N;++i) {
+        vector<int> v;
+        for(auto [p,e]: vvp[i]) {
+            if(mp_maxi[p]==e) if(mp_cnt[p] == 1) v.push_back(p);
+        }
+        st.insert(v);
+    }
+    cout << st.size() << endl;
+
     return 0;
 }

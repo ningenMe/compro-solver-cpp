@@ -88,40 +88,153 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title UnionFindTree - Union Find Tree
+ * @docs md/union-find-tree/UnionFindTree.md
+ */
+class UnionFindTree {
+    vector<int> parent,maxi,mini;
+    inline int root(int n) {
+        return (parent[n]<0?n:parent[n] = root(parent[n]));
+    }
+public:
+    UnionFindTree(const int N = 1) : parent(N,-1),maxi(N),mini(N){
+        iota(maxi.begin(),maxi.end(),0);
+        iota(mini.begin(),mini.end(),0);
+    }
+    inline bool connected(const int n, const int m) {
+        return root(n) == root(m);
+    }
+    inline void merge(int n,int m) {
+        n = root(n);
+        m = root(m);
+        if (n == m) return;
+        if(parent[n]>parent[m]) swap(n, m);
+        parent[n] += parent[m];
+        parent[m] = n;
+        maxi[n] = std::max(maxi[n],maxi[m]);
+        mini[n] = std::min(mini[n],mini[m]);
+    }
+    inline int min(const int n) {
+        return mini[root(n)];
+    }
+    inline int max(const int n) {
+        return maxi[root(n)];
+    }
+    inline int size(const int n){
+        return (-parent[root(n)]);
+    }
+    inline int operator[](const int n) {
+        return root(n);
+    }
+    inline void print() {
+        for(int i = 0; i < parent.size(); ++i) cout << root(i) << " ";
+        cout << endl;
+    }
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int H,W; read(H),read(W);
+    vector<string> vs(H);
+    for(int i=0; i<H;++i) read(vs[i]);
+    auto v_x = multivector(H,26,0);
+    auto v_y = multivector(W,26,0);
+    for(int i=0;i<H;++i) {
+        for(int j=0;j<W;++j) {
+            v_x[i][vs[i][j]-'a']++;
+            v_y[j][vs[i][j]-'a']++;
+        }
     }
-
-    auto g = multivector(N,N,-1);
     queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
+    set<pair<int,int>> st;
+    {
+        for(int i=0;i<H;++i){
+            {
+                int c=0,s=0;
+                for(int k=0;k<26;++k) {
+                    c += (v_x[i][k]>0);
+                    s += v_x[i][k];
+                }
+                if(s>1 && c==1 && !st.count({i,0})) {
+                    q.emplace(i,0);
+                    st.insert({i,0});
+                }
+            }        
+        }
+
+        {
+            for(int j=0;j<W;++j) {
+                int c=0,s=0;
+                for(int k=0;k<26;++k) {
+                    c += (v_y[j][k]>0);
+                    s += v_y[j][k];
+                }
+                if(s>1 && c==1 && !st.count({j,1})) {
+                    q.emplace(j,1);
+                    st.insert({j,1});
                 }
             }
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    while(q.size()) {
+        auto [kk,x_or_y]=q.front(); q.pop();
+        if(x_or_y == 0) {
+            for(int j=0;j<W;++j) {
+                if(vs[kk][j]=='.') continue;
+                int c = vs[kk][j]-'a';
+                vs[kk][j]='.';
+                v_y[j][c]--;
+            }
+        }
+        if(x_or_y == 1) {
+            for(int i=0;i<H;++i) {
+                if(vs[i][kk]=='.') continue;
+                int c = vs[i][kk]-'a';
+                vs[i][kk]='.';
+                v_x[i][c]--;
+            }
+        }
+
+        for(int i=0;i<H;++i){
+            {
+                int c=0,s=0;
+                for(int k=0;k<26;++k) {
+                    c += (v_x[i][k]>0);
+                    s += v_x[i][k];
+                }
+                if(s>1 && c==1 && !st.count({i,0})) {
+                    q.emplace(i,0);
+                    st.insert({i,0});
+                }
+            }        
+        }
+        {
+            for(int j=0;j<W;++j) {
+                int c=0,s=0;
+                for(int k=0;k<26;++k) {
+                    c += (v_y[j][k]>0);
+                    s += v_y[j][k];
+                }
+                if(s>1 && c==1 && !st.count({j,1})) {
+                    q.emplace(j,1);
+                    st.insert({j,1});
+                }
+            }
+        }
+    }
+    int ans=0;
+    for(int i=0;i<H;++i) {
+        for(int j=0;j<W;++j) {
+            if(vs[i][j]=='.') continue;
+            ans++;
+        }
+    }
+    cout << ans << endl;
+
     return 0;
 }

@@ -94,34 +94,26 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int N; read(N);
+    string S; read(S);
+    vector<int> u(10,0);
+    {
+        for(int i=0;i<S.size();++i) u[S[i]-'0']++;
     }
+    int ans=0;
+    for(int64 x=0; ; ++x) {
+        int64 y = x*x;
+        string s = to_string(y);
+        if(s.size()>13) break;
+        vector<int> v(10,0);
+        for(int i=0;i<s.size();++i) v[s[i]-'0']++;
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
+        int flg=1;
+        for(int i=1;i<10;++i) if(v[i]!=u[i]) flg=0;
+        if(v[0]>u[0]) flg=0;
+        ans+=flg;
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    cout << ans << endl;
+
     return 0;
 }

@@ -88,40 +88,65 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+int64 f(int64 X, int64 N, int64 K) {
+    if(K<0) return 0;
+
+    int64 L = X;
+    int64 R = X;
+
+    for(int j=0; j < K; ++j) {
+        L *= 2;
+        R = 2*R + 1;
+        if(N < L) {
+            return 0;
+        }
+    }   
+    R = min(R, N);
+    int64 sum = R-L+1;
+    return sum;
+}
+
+void solve() {
+    int64 N,X,K;
+    read(N),read(X),read(K);
+    int64 D = 0;
+    {
+        int64 tmp = X;
+        while(tmp>1) {
+            tmp /= 2;
+            D++;
+        }
+    }
+    int64 ans=0;
+    int64 Y = X;
+    for(int64 i=0; i<=D; ++i) {
+        //頂点 Y から 距離 K - i 下の頂点の数
+        int M = K-(i+1);
+        if(i==0) M = K;
+        ans += f(Y, N, M);
+
+        if(X%2==0) {
+            X /= 2;
+            Y = X*2 + 1;            
+        }
+        else {
+            X /= 2;
+            Y = X*2;
+        }
+    }
+    ans += (K!=0 && K<=D);
+    cout << ans << "\n";
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int T; read(T);
+    while(T--) {
+        solve();
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
-        }
-    }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
     return 0;
 }

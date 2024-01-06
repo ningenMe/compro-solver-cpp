@@ -94,34 +94,64 @@ void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
-    }
+    int64 XA,YA,XB,YB,XC,YC;
+    read(XA),read(YA),read(XB),read(YB),read(XC),read(YC);
+    XB -= XA;
+    XC -= XA;
+    YB -= YA;
+    YC -= YA;
+    XA=0,YA=0;
 
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    vector<int64> dx = { 0,0,-1,1};
+    vector<int64> dy = {-1,1, 0,0};
+
+    int64 ans = HIGHINF;
+    
+    for(int i=0;i<4;++i) {
+        int64 x = XB + dx[i];
+        int64 y = YB + dy[i];
+        int64 cnt = abs(x) + abs(y);
+        if(i==0) {
+            if(0 == x && 0 > y) cnt += 2;
         }
+        if(i==1) {
+            if(0 == x && 0 < y) cnt += 2;
+        }
+        if(i==2) {
+            if(0 == y && 0 > x) cnt += 2;
+        }
+        if(i==3) {
+            if(0 == y && 0 < x) cnt += 2;
+        }
+
+        //下にいる
+        if(i==0) {
+            if(!(YB < YC)) continue;
+            if(XB == XC) cnt += abs(YC - YB);
+            else cnt += abs(YC-YB) + abs(XC-XB) + 2;
+        }
+        //上にいる
+        if(i==1) {
+            if(!(YB > YC)) continue;
+            if(XB == XC) cnt += abs(YC - YB);
+            else cnt += abs(YC-YB) + abs(XC-XB) + 2;
+        }
+        //左にいる
+        if(i==2) {
+            if(!(XB < XC)) continue;
+            if(YB == YC) cnt += abs(XC - XB);
+            else cnt += abs(XC-XB) + abs(YC-YB) + 2;
+        }
+        //右にいる
+        if(i==3) {
+            if(!(XB > XC)) continue;
+            if(YB == YC) cnt += abs(XC - XB);
+            else cnt += abs(XC-XB) + abs(YC-YB) + 2;
+        }
+        chmin(ans,cnt);
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    cout << ans << endl;
+
+
     return 0;
 }

@@ -53,6 +53,7 @@ public:
     inline static void read(long long &x) {read_integer<long long>(x);}
     inline static void read(unsigned int &x) {read_unsigned_integer<unsigned int>(x);}
     inline static void read(unsigned long long &x) {read_unsigned_integer<unsigned long long>(x);}
+    inline static void read(char &x) {string tmp; read_string(tmp); x=tmp[0];}
     inline static void read(string &x) {read_string(x);}
     inline static void read(__int128_t &x) {read_integer<__int128_t>(x);}
     inline static void write(__int128_t x) {write_integer<__int128_t>(x);}
@@ -88,40 +89,150 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title DualSegmentTree - 非再帰抽象化双対セグメント木
+ * @docs md/segment-tree/DualSegmentTree.md
+ */
+template<class Monoid> class DualSegmentTree {
+    using TypeNode = typename Monoid::TypeNode;
+    using TypeLazy = typename Monoid::TypeLazy;
+    size_t length;
+    size_t height;
+    vector<TypeNode> node;
+    vector<TypeLazy> lazy;
+
+    void propagate(int k) {
+        if(lazy[k] == Monoid::unit_lazy) return;
+        if(k >=length) node[k-length] = Monoid::func_operate(node[k-length],lazy[k],k-length,k-length+1);
+        if(k < length) lazy[2*k+0] = Monoid::func_lazy(lazy[2*k+0],lazy[k]);
+        if(k < length) lazy[2*k+1] = Monoid::func_lazy(lazy[2*k+1],lazy[k]);
+        lazy[k] = Monoid::unit_lazy;
+    }
+    void build(const size_t num) {
+        for (length = 1,height = 0; length <= num; length *= 2, height++);
+        node.resize(1 * length, Monoid::unit_node);
+        lazy.resize(2 * length, Monoid::unit_lazy);
+    }
+
+public:
+
+    //unitで初期化
+    DualSegmentTree(const size_t num) {
+        build(num);
+    }
+    // //同じinitで初期化
+    DualSegmentTree(const size_t num, const TypeNode init) {
+        build(num);
+        for (int i = 0; i < num; ++i) node[i] = init;
+    }
+    //vectorで初期化
+    DualSegmentTree(const vector<TypeNode>& vec) {
+        build(vec.size());
+        for (int i = 0; i < vec.size(); ++i) node[i] = vec[i];
+    }
+
+    //operate [a,b)
+    void operate(int a, int b, TypeLazy x) {
+        int l = a + length, r = b + length - 1;
+        for (int i = height; 0 < i; --i) propagate(l >> i), propagate(r >> i);
+        for(r++; l < r; l >>=1, r >>=1) {
+            if(l&1) lazy[l] = Monoid::func_lazy(lazy[l],x), propagate(l),l++;
+            if(r&1) --r,lazy[r] = Monoid::func_lazy(lazy[r],x), propagate(r);
+        }
+    }
+
+    //fold [a,a+1)
+    TypeNode fold(int a) {
+        int l = a + length;
+        for (int i = height; 0 <= i; --i) propagate(l >> i);
+        return node[a];
+    }
+
+    void print(){
+        // cout << "lazy" << endl;
+        // for(int i = 1,j = 1; i < 2*length; ++i) {
+        //     cout << lazy[i] << " ";
+        //     if(i==((1<<j)-1) && ++j) cout << endl;
+        // }
+        cout << "vector" << endl;
+        cout << "{ " << fold(0);
+        for(int i = 1; i < length; ++i) cout << ", " << fold(i);
+        cout << " }" << endl;
+    }
+};
+
+/*
+ * @title MonoidRangeFoldMinRangeOperateAdd - fold:区間min, operate:区間加算
+ * @docs md/operator/monoid-lazy/MonoidRangeFoldMinRangeOperateAdd.md
+ */
+template<class T, class U> struct MonoidRangeFoldVoidRangeOperateUpdate {
+    using TypeNode = T;
+    using TypeLazy = U;
+    inline static constexpr TypeNode unit_node = {26, -1};
+    inline static constexpr TypeLazy unit_lazy = {26, -1};
+    inline static constexpr TypeNode func_fold(TypeNode l,TypeNode r){return {26, -1};}
+    inline static constexpr TypeLazy func_lazy(TypeLazy old_lazy,TypeLazy new_lazy){
+        if(new_lazy.first == 26) {
+            return {old_lazy.first, new_lazy.second};
+        }
+        else {
+            return new_lazy;
+        }
+    }
+    inline static constexpr TypeNode func_operate(TypeNode node,TypeLazy lazy,int l, int r){
+        if(lazy.first == 26) {
+            return {node.first, lazy.second};
+        }
+        else {
+            return lazy;
+        }
+    }
+};
+
+using P = pair<int,int>;
+P trans(char c) {
+    if(0 <= c-'a' && c-'a'<26) {
+        return {c-'a',0};
+    }
+    else {
+        return {c-'A',1};
+    }
+}
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    
+    int N; read(N);
+    DualSegmentTree<MonoidRangeFoldVoidRangeOperateUpdate<P,P>> seg(N);
+    string S; read(S);
+    for(int i=0;i<N;++i) {
+        char c = S[i];
+        seg.operate(i,i+1,trans(c));
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    int Q; read(Q);
+    while(Q--) {
+        int t,x; read(t),read(x);
+        char c; read(c);
+        x--;
+        if(t==1) {
+            seg.operate(x,x+1,trans(c));
+        }
+        if(t==2) {
+            seg.operate(0,N,{26,0});
+        }
+        if(t==3) {
+            seg.operate(0,N,{26,1});
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    for(int i=0;i<N;++i) {
+        auto [d,flg] = seg.fold(i);
+        char c = char((flg ? 'A':'a') + d);
+        cout << c;
+    }
+    cout << "\n";
     return 0;
 }

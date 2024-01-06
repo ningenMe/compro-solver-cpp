@@ -88,40 +88,103 @@ void YN(bool flg) {cout << (flg ? "YES" : "NO") << endl;}
 void Yn(bool flg) {cout << (flg ? "Yes" : "No") << endl;}
 void yn(bool flg) {cout << (flg ? "yes" : "no") << endl;}
 
+/*
+ * @title StronglyConnectedComponents - 強連結成分分解
+ * @docs md/graph/StronglyConnectedComponents.md
+ */
+class StronglyConnectedComponents{
+    int num,is_2sat,half,max_id,cnt;
+    vector<vector<int>> edge;
+    vector<int> label,order,low;
+    stack<size_t> st;
+    inline int rev(int i) { return i < half ? i + half : i - half; }
+    inline void dfs(int& from) {
+        low[from]=order[from]=cnt++;
+        st.push(from);
+        for(int& to:edge[from]) {
+            if(order[to]==-1) {
+                dfs(to);
+                low[from]=min(low[from],low[to]);
+            }
+            else {
+                low[from]=min(low[from],order[to]);
+            }
+        }
+        if (low[from] == order[from]) {
+            while(st.size()) {
+                int u = st.top();st.pop();
+                order[u] = num;
+                label[u] = max_id;
+                if (u == from) break;
+            }
+            max_id++;
+        }
+    }
+public:
+    StronglyConnectedComponents(const int n, bool is_2sat=0):num(n),max_id(0),cnt(0),is_2sat(is_2sat){
+        if(is_2sat) num<<=1;
+        edge.resize(num);
+        label.resize(num);
+        order.resize(num,-1);
+        low.resize(num);
+        half=(num>>1);
+    }
+    inline int operator[](int idx) {
+        return label[idx];
+    }
+    inline void make_edge(const int from,const int to) {
+        edge[from].push_back(to);
+    }
+    //xがflg_xならばyがflg_y
+    inline void make_condition(int x, bool flg_x, int y, bool flg_y) {
+        if (!flg_x) x = rev(x);
+        if (!flg_y) y = rev(y);
+        make_edge(x, y);
+        make_edge(rev(y), rev(x));
+    }
+    //is_2sat=1のときに、2satを満たすかを返却する
+    inline bool solve(void) {
+        for (int i = 0; i < num; i++) if (order[i] == -1) dfs(i);
+        for (int& id:label) id = max_id-1-id;
+        if(!is_2sat) return true;
+        for (int i = 0; i < num; ++i) if (label[i] == label[rev(i)]) return false;
+        return true;
+    }
+    vector<vector<int>> topological_sort(void) {
+        vector<vector<int>> ret(max_id);
+        for(int i=0;i<num;++i) ret[label[i]].push_back(i);
+        return ret;
+    }
+    int is_true(int i) {
+        return label[i] > label[rev(i)];
+    }
+    void print(void) {
+        for(auto id:label) cout << id << " ";
+        cout << endl;
+    }
+};
+
 /**
  * @url 
  * @est
  */ 
 int main() {
     cin.tie(0);ios::sync_with_stdio(false);
-    int N,M; read(N),read(M);
-    set<int> st;
-    for(int i=0;i*i<=M;++i) st.insert(i*i);
-    vector<pair<int,int>> vp;
-    for(auto a: st) {
-        if(!st.count(M-a)) continue;
-        vp.emplace_back(sqrt(a),sqrt(M-a));
+    int N; read(N);
+    map<string,int> mp_s,mp_t;
+    for(int i=0;i<N;++i) {
+        string s; read(s);
+        string t; read(t);
+        mp_s[s]=mp_t[t]=i;
     }
-
-    auto g = multivector(N,N,-1);
-    queue<pair<int,int>> q;
-    q.emplace(0,0);
-    g[0][0]=0;
-    vector<int> dy = {-1,1,-1,1};
-    vector<int> dx = {-1,-1,1,1};
-    while(q.size()) {
-        auto [y,x]=q.front(); q.pop();
-        for(auto [a,b]: vp) {
-            for(int i=0;i<4;++i) {
-                int s = y + dy[i]*a;
-                int t = x + dx[i]*b;
-                if(0 <= s && s < N && 0 <= t && t < N && g[s][t]==-1) {
-                    q.emplace(s,t);
-                    g[s][t]=g[y][x]+1;
-                }
-            }
+    StronglyConnectedComponents scc(N);
+    for(auto [key,val]: mp_t) {
+        if(mp_s.count(key)) {
+            scc.make_edge(mp_s[key],val);
         }
     }
-    for(int i=0;i<N;++i) for(int j=0;j<N;++j) cout << g[i][j] << " \n"[j==N-1];
+    scc.solve();
+    auto tp = scc.topological_sort();
+    Yn(tp.size()==N);
     return 0;
 }
